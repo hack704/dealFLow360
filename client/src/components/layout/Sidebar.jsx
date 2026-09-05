@@ -24,17 +24,17 @@ export const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 border-r border-slate-800 bg-slate-950 flex flex-col h-screen sticky top-0 shrink-0">
+    <aside className="w-64 border-r border-black/[0.08] dark:border-white/[0.08] bg-white/80 dark:bg-[#161618]/90 backdrop-blur-2xl flex flex-col h-screen sticky top-0 shrink-0 transition-colors">
       {/* Brand Header */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-800 space-x-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-indigo-950">
-          <Layers className="w-4 h-4" />
+      <div className="h-16 flex items-center px-6 border-b border-black/[0.06] dark:border-white/[0.08] space-x-3">
+        <div className="w-8 h-8 rounded-[10px] bg-gradient-to-tr from-[#0071e3] to-[#2997ff] flex items-center justify-center text-white shadow-sm shadow-blue-500/20">
+          <Layers className="w-4.5 h-4.5" />
         </div>
         <div>
-          <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
-            DealFlow<span className="text-indigo-400">360</span>
+          <h1 className="text-[15px] font-semibold tracking-tight text-[#1d1d1f] dark:text-white flex items-center gap-1.5 whitespace-nowrap">
+            DealFlow<span className="text-[#0071e3] dark:text-[#2997ff]">360</span>
           </h1>
-          <span className="text-[10px] text-slate-400 block tracking-wide uppercase font-mono">
+          <span className="text-[13px] text-[#86868b] block tracking-wide uppercase font-mono whitespace-nowrap">
             CPQ & Deal OS
           </span>
         </div>
@@ -42,7 +42,7 @@ export const Sidebar = () => {
 
       {/* Navigation Menu */}
       <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2 font-mono">
+        <div className="text-[13px] font-semibold text-[#86868b] uppercase tracking-wider px-3 mb-2 font-mono whitespace-nowrap">
           Core Workflows
         </div>
         {navItems.map((item) => {
@@ -52,19 +52,19 @@ export const Sidebar = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
+                `flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-indigo-600/15 text-indigo-300 border border-indigo-500/30'
+                    ? 'bg-[#0071e3]/10 dark:bg-[#2997ff]/15 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/25 dark:border-[#2997ff]/30 font-semibold shadow-sm'
                     : item.highlight
-                    ? 'text-indigo-400 hover:text-indigo-300 hover:bg-slate-900 border border-indigo-900/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent'
+                    ? 'text-[#0071e3] dark:text-[#2997ff] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] border border-[#0071e3]/20 dark:border-[#2997ff]/20'
+                    : 'text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] border border-transparent'
                 }`
               }
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span>{item.label}</span>
+              <span className="whitespace-nowrap">{item.label}</span>
               {item.highlight && (
-                <span className="ml-auto text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="ml-auto text-[13px] font-semibold uppercase px-2 py-0.5 rounded-lg bg-[#0071e3]/15 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/30 whitespace-nowrap">
                   CPQ
                 </span>
               )}
@@ -74,10 +74,10 @@ export const Sidebar = () => {
       </nav>
 
       {/* Footer Info */}
-      <div className="p-4 border-t border-slate-800 text-[11px] text-slate-400">
-        <div className="flex justify-between items-center">
-          <span>Platform v1.0.0</span>
-          <span className="text-emerald-400 font-mono">● Online</span>
+      <div className="p-4 border-t border-black/[0.06] dark:border-white/[0.08] text-[13px] text-[#86868b] whitespace-nowrap">
+        <div className="flex justify-between items-center whitespace-nowrap">
+          <span className="whitespace-nowrap">Platform v1.0.0</span>
+          <span className="text-[#34c759] font-mono whitespace-nowrap">● Online</span>
         </div>
       </div>
     </aside>

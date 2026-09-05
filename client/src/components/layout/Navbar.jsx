@@ -1,47 +1,158 @@
 import React from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, User as UserIcon, ShieldAlert } from 'lucide-react';
-import Badge from '../common/Badge';
+import { useTheme } from '../../context/ThemeContext';
+import {
+  Layers,
+  LogOut,
+  User as UserIcon,
+  ExternalLink,
+  ShieldCheck,
+  Sun,
+  Moon,
+  LayoutDashboard,
+  FileText,
+  CheckCircle2,
+  Truck,
+  Repeat,
+  Receipt,
+  Activity,
+  BarChart3,
+  Package,
+  MessageSquare
+} from 'lucide-react';
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isPortal = location.pathname.startsWith('/portal');
+
+  const mainTabs = [
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/quotations', label: 'Quotations', icon: FileText },
+    { to: '/approvals', label: 'Approvals', icon: CheckCircle2 },
+    { to: '/fulfillment', label: 'Fulfillment', icon: Truck },
+    { to: '/subscriptions', label: 'Subscriptions', icon: Repeat },
+    { to: '/invoices', label: 'Invoices', icon: Receipt },
+    { to: '/deal-health', label: 'Deal Health', icon: Activity },
+    { to: '/reports', label: 'Reports', icon: BarChart3 },
+    { to: '/products', label: 'Products', icon: Package }
+  ];
+
+  const portalTabs = [
+    { to: '/portal', label: 'My Quotation', icon: FileText },
+    { to: '/portal/messages', label: 'Messages', icon: MessageSquare },
+    { to: '/portal/profile', label: 'Profile', icon: UserIcon }
+  ];
+
+  const currentTabs = isPortal ? portalTabs : mainTabs;
 
   return (
-    <header className="h-16 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 px-6 flex items-center justify-between">
-      <div className="flex items-center space-x-3">
-        <span className="text-xs text-slate-400 font-mono uppercase tracking-wider">
-          Deal Lifecycle Management
-        </span>
-        <span className="text-slate-600">/</span>
-        <div className="flex items-center space-x-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs text-slate-300 font-medium">CPQ Engine Active</span>
+    <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] transition-colors duration-200">
+      <div className="max-w-[1560px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        {/* Logo */}
+        <div className="flex items-center space-x-3 shrink-0">
+          <button
+            onClick={() => navigate(isPortal ? '/portal' : '/dashboard')}
+            className="flex items-center space-x-2.5 text-left group"
+          >
+            <div className="w-8 h-8 rounded-[10px] bg-gradient-to-tr from-[#0071e3] to-[#2997ff] flex items-center justify-center text-white shadow-sm shadow-blue-500/20">
+              <Layers className="w-4.5 h-4.5" />
+            </div>
+            <span className="text-[15px] font-semibold tracking-[-0.015em] text-[#1d1d1f] dark:text-white group-hover:text-[#0071e3] dark:group-hover:text-[#2997ff] transition-colors">
+              DealFlow360
+            </span>
+          </button>
         </div>
-      </div>
 
-      <div className="flex items-center space-x-4">
-        {user && (
-          <div className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5">
-            <div className="w-7 h-7 rounded-full bg-indigo-950 border border-indigo-700/60 flex items-center justify-center text-indigo-300 font-semibold text-xs">
-              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-medium text-slate-200">{user.name}</div>
-              <div className="text-[10px] text-slate-400 capitalize">{user.role ? user.role.replace('_', ' ') : ''}</div>
-            </div>
-            <Badge variant="primary" size="xs">
-              {user.department || 'Sales'}
-            </Badge>
-          </div>
-        )}
+        {/* Apple Transparent Gesture Segmented Tab Bar */}
+        <nav className="flex items-center space-x-1 overflow-x-auto no-scrollbar py-1">
+          {currentTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive =
+              location.pathname === tab.to ||
+              (tab.to !== '/dashboard' &&
+                tab.to !== '/portal' &&
+                location.pathname.startsWith(tab.to));
 
-        <button
-          onClick={logout}
-          title="Sign out"
-          className="text-slate-400 hover:text-rose-400 p-2 rounded-lg hover:bg-slate-900 transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+            return (
+              <NavLink
+                key={tab.to}
+                to={tab.to}
+                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 whitespace-nowrap select-none border ${
+                  isActive
+                    ? 'bg-[#0071e3]/10 dark:bg-[#2997ff]/15 text-[#0071e3] dark:text-[#2997ff] border-[#0071e3]/25 dark:border-[#2997ff]/30 font-semibold shadow-sm'
+                    : 'bg-transparent text-[#6e6e73] dark:text-[#86868b] border-transparent hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] font-medium'
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 shrink-0 ${
+                    isActive
+                      ? 'text-[#0071e3] dark:text-[#2997ff]'
+                      : 'text-[#86868b] dark:text-[#6e6e73]'
+                  }`}
+                />
+                <span>{tab.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Right Actions: Theme Toggle, View Switcher & User Profile */}
+        <div className="flex items-center space-x-2.5 shrink-0">
+          {/* Apple Transparent Icon Gesture: Light / Dark Mode Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-black/[0.03] hover:bg-black/[0.07] dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white border border-black/[0.06] dark:border-white/[0.08] transition-all duration-200 shadow-sm"
+          >
+            {isDark ? (
+              <Sun className="w-4 h-4 text-[#ff9f0a]" />
+            ) : (
+              <Moon className="w-4 h-4 text-[#0071e3]" />
+            )}
+          </button>
+
+          {isPortal ? (
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="h-9 px-4 rounded-xl text-[13px] font-medium bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-[#1d1d1f] dark:text-white border border-black/[0.08] dark:border-white/[0.1] transition-colors whitespace-nowrap"
+            >
+              Back to Internal
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/portal')}
+              className="h-9 px-4 rounded-xl text-[13px] font-medium bg-[#0071e3]/10 dark:bg-[#0071e3]/15 hover:bg-[#0071e3]/20 dark:hover:bg-[#0071e3]/25 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 dark:border-[#0071e3]/30 transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+            >
+              <span>Customer Portal</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {user && (
+            <div className="hidden md:flex items-center space-x-2.5 pl-2.5 border-l border-black/[0.08] dark:border-white/[0.08]">
+              <div className="text-right">
+                <div className="text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] leading-tight whitespace-nowrap">{user.name}</div>
+                <div className="text-[12px] text-[#6e6e73] dark:text-[#86868b] uppercase font-mono mt-0.5 whitespace-nowrap">
+                  {user.role?.replace('_', ' ')}
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                title="Sign out"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6e6e73] dark:text-[#86868b] hover:text-[#ff453a] hover:bg-black/[0.05] dark:hover:bg-white/[0.06] transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

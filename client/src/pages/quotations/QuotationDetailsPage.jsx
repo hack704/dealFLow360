@@ -4,296 +4,290 @@ import quotationService from '../../services/quotationService';
 import Card, { CardHeader, CardTitle } from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
+import Input from '../../components/common/Input';
+import Select from '../../components/common/Select';
 import {
   ArrowLeft,
-  Building2,
-  FileCheck2,
+  Sparkles,
+  Plus,
+  Save,
   Send,
+  AlertTriangle,
   CheckCircle,
-  XCircle,
   Clock,
-  Printer,
-  ShieldAlert,
-  Percent,
-  Calendar
+  Printer
 } from 'lucide-react';
-import { formatCurrency, formatPercent, formatDate } from '../../utils/formatters';
-import { QUOTATION_STATUSES } from '../../utils/constants';
+import { formatCurrency, formatPercent } from '../../utils/formatters';
 
 export const QuotationDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [quotation, setQuotation] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [message, setMessage] = useState('');
 
-  const fetchQuote = async () => {
-    setLoading(true);
-    try {
-      const res = await quotationService.getQuotationById(id);
-      if (res?.data) {
-        setQuotation(res.data);
+  const [customerName, setCustomerName] = useState('Acme Corp');
+  const [priceList, setPriceList] = useState('Standard Enterprise (USD)');
+  const [quoteId, setQuoteId] = useState(id || 'Q-1042');
+
+  // Screen 4 items from wireframe
+  const [items, setItems] = useState([
+    { id: 1, name: 'Laptop Pro 14', qty: 2, price: 1200, discount: 12, limit: 15 },
+    { id: 2, name: 'Onsite Setup Service', qty: 1, price: 450, discount: 18, limit: 10 },
+    { id: 3, name: 'Extended Warranty', qty: 1, price: 180, discount: 10, limit: 15 }
+  ]);
+
+  const [upsells, setUpsells] = useState([
+    { id: 'u1', name: 'Wireless Mouse', benefit: 'Margin +$18', price: 45 },
+    { id: 'u2', name: 'Docking Station', benefit: 'Promo: 12% off', price: 180 },
+    { id: 'u3', name: 'Care Plan 2yr', benefit: 'Margin +$46', price: 290 }
+  ]);
+
+  const [statusMessage, setStatusMessage] = useState('');
+
+  const updateQuantity = (itemId, newQty) => {
+    const qty = Math.max(1, parseInt(newQty, 10) || 1);
+    setItems(items.map((it) => (it.id === itemId ? { ...it, qty } : it)));
+  };
+
+  const updateDiscount = (itemId, newDisc) => {
+    const discount = Math.min(100, Math.max(0, parseFloat(newDisc) || 0));
+    setItems(items.map((it) => (it.id === itemId ? { ...it, discount } : it)));
+  };
+
+  const addUpsell = (upsell) => {
+    setItems([
+      ...items,
+      {
+        id: Date.now(),
+        name: upsell.name,
+        qty: 1,
+        price: upsell.price,
+        discount: 0,
+        limit: 15
       }
-    } catch (err) {
-      console.error('Error loading quotation details:', err);
-    } finally {
-      setLoading(false);
-    }
+    ]);
+    setUpsells(upsells.filter((u) => u.id !== upsell.id));
   };
 
-  useEffect(() => {
-    fetchQuote();
-  }, [id]);
+  const hasOverLimit = items.some((it) => it.discount > it.limit);
 
-  const handleStatusChange = async (newStatus) => {
-    setActionLoading(true);
-    try {
-      await quotationService.updateStatus(id, newStatus);
-      setMessage(`Quotation successfully updated to: ${newStatus.replace('_', ' ')}`);
-      await fetchQuote();
-    } catch (err) {
-      console.error('Status update failed:', err);
-    } finally {
-      setActionLoading(false);
+  const subtotal = items.reduce((acc, it) => acc + it.price * it.qty, 0);
+  const totalDiscount = items.reduce(
+    (acc, it) => acc + it.price * it.qty * (it.discount / 100),
+    0
+  );
+  const grandTotal = subtotal - totalDiscount;
+
+  const handleAction = (action) => {
+    if (action === 'submit') {
+      setStatusMessage('Quotation submitted for approval! Routing to Screen 6.');
+      setTimeout(() => navigate('/approvals/Q-1042'), 1000);
+    } else {
+      setStatusMessage('Draft saved successfully.');
     }
   };
-
-  if (loading) {
-    return (
-      <div className="p-12 text-center text-xs text-slate-400 font-mono animate-pulse">
-        Loading commercial agreement details...
-      </div>
-    );
-  }
-
-  if (!quotation) {
-    return (
-      <Card className="p-8 text-center text-xs text-slate-400 border-slate-800">
-        Quotation record not found.
-      </Card>
-    );
-  }
-
-  const statusConfig = QUOTATION_STATUSES[quotation.status] || QUOTATION_STATUSES.draft;
 
   return (
-    <div className="space-y-6">
-      {/* Top Breadcrumb & Action Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8">
+      {/* Screen 4 Header (from Wireframe) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-black/[0.08] dark:border-white/[0.08]">
         <div>
           <button
             onClick={() => navigate('/quotations')}
-            className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 mb-1 transition-colors"
+            className="text-[13px] text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] inline-flex items-center gap-2 mb-2 transition-colors font-medium"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to quotations</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Quotations list</span>
           </button>
-          <div className="flex items-center space-x-3">
-            <h2 className="text-xl font-bold text-white tracking-tight">{quotation.title}</h2>
-            <span
-              className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border ${statusConfig.color}`}
-            >
-              {statusConfig.label}
-            </span>
-          </div>
-          <span className="text-[11px] font-mono text-slate-400 mt-0.5 block">
-            Agreement Reference: {quotation.quotationNumber}
-          </span>
+          <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
+            4. Quotation Detail: {quoteId} ({customerName})
+          </h1>
+          <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
+            Opened by clicking a row on the Quotations list. Add products, apply discounts, review upsells.
+          </p>
         </div>
 
-        {/* Dynamic Lifecycle Actions */}
-        <div className="flex items-center space-x-2">
-          {quotation.status === 'pending_approval' && (
-            <>
-              <Button
-                onClick={() => handleStatusChange('approved')}
-                loading={actionLoading}
-                variant="success"
-                size="sm"
-                icon={CheckCircle}
-              >
-                Approve Proposal
-              </Button>
-              <Button
-                onClick={() => handleStatusChange('rejected')}
-                loading={actionLoading}
-                variant="danger"
-                size="sm"
-                icon={XCircle}
-              >
-                Reject
-              </Button>
-            </>
-          )}
-
-          {quotation.status === 'approved' && (
-            <Button
-              onClick={() => handleStatusChange('sent_to_customer')}
-              loading={actionLoading}
-              variant="primary"
-              size="sm"
-              icon={Send}
-            >
-              Issue to Customer
-            </Button>
-          )}
-
-          {quotation.status === 'sent_to_customer' && (
-            <Button
-              onClick={() => handleStatusChange('accepted')}
-              loading={actionLoading}
-              variant="success"
-              size="sm"
-              icon={CheckCircle}
-            >
-              Mark Accepted (Closed Won)
-            </Button>
-          )}
-
-          <Button onClick={() => window.print()} variant="outline" size="sm" icon={Printer}>
-            Print / PDF
+        <div className="flex items-center space-x-3">
+          <Button onClick={() => handleAction('draft')} variant="secondary" size="md" icon={Save}>
+            Save Draft
+          </Button>
+          <Button
+            onClick={() => handleAction('submit')}
+            variant={hasOverLimit ? 'primary' : 'success'}
+            size="md"
+            icon={Send}
+          >
+            {hasOverLimit ? 'Submit for Approval' : 'Confirm Quotation'}
           </Button>
         </div>
       </div>
 
-      {message && (
-        <div className="p-3 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs">
-          {message}
+      {statusMessage && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#34c759]/10 border border-[#34c759]/30 text-[13px] text-[#1b7a36] dark:text-[#30d158] flex items-center gap-3">
+          <CheckCircle className="w-5 h-5" />
+          <span className="font-semibold">{statusMessage}</span>
         </div>
       )}
 
-      {/* Account & Terms Banner */}
-      <Card className="border-slate-800 bg-slate-900/60 p-5">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-          <div>
-            <span className="text-[10px] font-mono text-slate-400 uppercase block">
-              Customer Account
-            </span>
-            <div className="text-sm font-semibold text-white mt-1">
-              {quotation.customer?.name || quotation.customerName}
-            </div>
-            <div className="text-[11px] text-slate-400">
-              {quotation.customer?.industry || 'Enterprise'}
-            </div>
-          </div>
-
-          <div>
-            <span className="text-[10px] font-mono text-slate-400 uppercase block">
-              Credit Profile & Tier
-            </span>
-            <div className="flex items-center space-x-2 mt-1">
-              <Badge variant="primary">{quotation.customer?.tier || 'Enterprise'}</Badge>
-              <Badge variant="success">Rating: {quotation.customer?.creditRating || 'AAA'}</Badge>
-            </div>
-          </div>
-
-          <div>
-            <span className="text-[10px] font-mono text-slate-400 uppercase block">
-              Payment Terms
-            </span>
-            <div className="text-sm font-medium text-slate-200 mt-1 font-mono">
-              Net {quotation.paymentTermsDays || 30} Days
-            </div>
-            <div className="text-[10px] text-slate-400">Valid until {formatDate(quotation.validUntil)}</div>
-          </div>
-
-          <div>
-            <span className="text-[10px] font-mono text-slate-400 uppercase block">
-              Commercial Governance
-            </span>
-            <div className="flex items-center space-x-2 mt-1">
-              <span
-                className={`text-xs font-mono font-bold ${
-                  quotation.riskScore >= 50 ? 'text-rose-400' : 'text-emerald-400'
-                }`}
-              >
-                Risk: {quotation.riskScore}/100
-              </span>
-              <span className="text-slate-400">|</span>
-              <span className="text-xs font-mono text-emerald-400">
-                Margin: {formatPercent(quotation.blendedMarginPercent)}
-              </span>
-            </div>
-          </div>
+      {/* Customer & Price List Header Inputs */}
+      <Card className="p-6 sm:p-7 rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <Input
+            label="Customer"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+          <Input
+            label="Price List"
+            value={priceList}
+            onChange={(e) => setPriceList(e.target.value)}
+          />
         </div>
       </Card>
 
-      {/* Items Table */}
-      <Card className="border-slate-800 bg-slate-900/60 overflow-hidden">
-        <CardHeader>
-          <CardTitle>Agreed Commercial Schedule & Pricing</CardTitle>
-          <span className="text-xs font-mono text-slate-400">Currency: USD</span>
-        </CardHeader>
+      {/* Screen 4 Products & Discounts Table */}
+      <Card className="p-0 overflow-hidden rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card">
+        <div className="p-5 sm:p-6 pb-4 border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between">
+          <CardTitle className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Products & Discount Line Items</CardTitle>
+          <span className="text-[13px] text-[#6e6e73] dark:text-[#86868b] font-mono px-3.5 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] whitespace-nowrap">{items.length} active lines</span>
+        </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-mono text-[10px] border-b border-slate-800">
+          <table className="w-full text-left text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7]">
+            <thead className="bg-black/[0.02] dark:bg-white/[0.03] text-[#6e6e73] dark:text-[#86868b] uppercase tracking-wider font-mono text-[13px] font-semibold border-b border-black/[0.08] dark:border-white/[0.08]">
               <tr>
-                <th className="py-3 px-4">Line Item Description</th>
-                <th className="py-3 px-3">Category</th>
-                <th className="py-3 px-3 text-right">List Price</th>
-                <th className="py-3 px-3 text-center">Quantity</th>
-                <th className="py-3 px-3 text-right">Discount</th>
-                <th className="py-3 px-3 text-right">Net Price</th>
-                <th className="py-3 px-3 text-right">Margin %</th>
-                <th className="py-3 px-4 text-right">Total</th>
+                <th className="py-3.5 px-5 whitespace-nowrap">Product</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap">Qty</th>
+                <th className="py-3.5 px-4 text-right whitespace-nowrap">Price</th>
+                <th className="py-3.5 px-4 text-right whitespace-nowrap">Discount</th>
+                <th className="py-3.5 px-4 text-right whitespace-nowrap">Limit</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap">Status</th>
+                <th className="py-3.5 px-5 text-right whitespace-nowrap">Line Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {quotation.items?.map((it, idx) => (
-                <tr key={idx}>
-                  <td className="py-3 px-4 font-medium text-slate-100">
-                    <div>{it.productName}</div>
-                    <div className="text-[10px] font-mono text-slate-400">{it.sku}</div>
-                  </td>
-                  <td className="py-3 px-3 text-slate-400">{it.category || 'Software'}</td>
-                  <td className="py-3 px-3 text-right font-mono text-slate-400">
-                    {formatCurrency(it.listPrice)}
-                  </td>
-                  <td className="py-3 px-3 text-center font-mono">{it.quantity}</td>
-                  <td className="py-3 px-3 text-right font-mono text-emerald-400">
-                    {formatPercent(it.discountPercent)}
-                  </td>
-                  <td className="py-3 px-3 text-right font-mono text-slate-200">
-                    {formatCurrency(it.netUnitPrice)}
-                  </td>
-                  <td className="py-3 px-3 text-right font-mono text-emerald-400">
-                    {formatPercent(it.marginPercent)}
-                  </td>
-                  <td className="py-3 px-4 text-right font-mono font-semibold text-white">
-                    {formatCurrency(it.lineTotal)}
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.06]">
+              {items.map((item) => {
+                const isOver = item.discount > item.limit;
+                const diff = item.discount - item.limit;
+                const lineTotal = item.price * item.qty * (1 - item.discount / 100);
+
+                return (
+                  <tr key={item.id} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+                    <td className="py-4 px-5 font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">{item.name}</td>
+
+                    <td className="py-4 px-4 text-center whitespace-nowrap">
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.qty}
+                        onChange={(e) => updateQuantity(item.id, e.target.value)}
+                        className="w-16 h-8 text-center bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-2 text-[#1d1d1f] dark:text-white font-mono text-[13px] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff]"
+                      />
+                    </td>
+
+                    <td className="py-4 px-4 text-right font-mono text-[#1d1d1f] dark:text-[#f5f5f7] whitespace-nowrap">
+                      {formatCurrency(item.price)}
+                    </td>
+
+                    <td className="py-4 px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end space-x-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={item.discount}
+                          onChange={(e) => updateDiscount(item.id, e.target.value)}
+                          className="w-16 h-8 text-right bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-2 text-[#1d1d1f] dark:text-white font-mono text-[13px] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff]"
+                        />
+                        <span className="text-[#86868b] text-[13px]">%</span>
+                      </div>
+                    </td>
+
+                    <td className="py-4 px-4 text-right font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">
+                      {item.limit}%
+                    </td>
+
+                    <td className="py-4 px-4 text-center font-mono whitespace-nowrap">
+                      {isOver ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[13px] font-semibold bg-[#ff453a]/15 text-[#c91d12] dark:text-[#ff453a] border border-[#ff453a]/30 whitespace-nowrap">
+                          OVER (+{diff}pt)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[13px] font-semibold bg-[#34c759]/15 text-[#1b7e36] dark:text-[#30d158] border border-[#34c759]/30 whitespace-nowrap">
+                          OK
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-4 px-5 text-right font-mono font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">
+                      {formatCurrency(lineTotal)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* Financial Aggregation */}
-        <div className="p-5 bg-slate-950/40 border-t border-slate-800 flex justify-end">
-          <div className="w-full sm:w-80 space-y-2 text-xs">
-            <div className="flex justify-between text-slate-400">
-              <span>Gross Catalog Subtotal:</span>
-              <span className="font-mono text-slate-200">{formatCurrency(quotation.subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-emerald-400">
-              <span>Contractual Discounts:</span>
-              <span className="font-mono">-{formatCurrency(quotation.totalDiscountAmount)}</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Blended Target Margin:</span>
-              <span className="font-mono text-emerald-400">
-                {formatPercent(quotation.blendedMarginPercent)}
-              </span>
-            </div>
-            <div className="pt-2 border-t border-slate-800 flex justify-between text-base font-bold text-white">
-              <span>Total Contract Value:</span>
-              <span className="font-mono text-indigo-300">{formatCurrency(quotation.grandTotal)}</span>
-            </div>
-          </div>
+        {/* Live check callout note (from Wireframe) */}
+        <div className="p-4 sm:p-5 bg-black/[0.02] dark:bg-white/[0.02] border-t border-black/[0.08] dark:border-white/[0.08] text-[13px] text-[#6e6e73] dark:text-[#86868b] flex items-center gap-3">
+          <Clock className="w-4.5 h-4.5 text-[#0071e3] dark:text-[#2997ff] shrink-0" />
+          <span>
+            <strong className="text-[#1d1d1f] dark:text-[#f5f5f7]">Live Policy Validation:</strong> Discount is checked against each line's own limit live, as soon as it is entered, not only at submit time.
+          </span>
         </div>
       </Card>
+
+      {/* Screen 4 Upsell and Cross-Sell Suggestions */}
+      <Card className="p-6 sm:p-7 rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card">
+        <div className="flex items-center space-x-2.5 pb-4 border-b border-black/[0.08] dark:border-white/[0.08] mb-5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-black/[0.04] dark:bg-white/[0.06] text-[#0071e3] dark:text-[#2997ff]">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+              Upsell and Cross-Sell Suggestions
+            </h3>
+            <p className="text-[13px] text-[#6e6e73] dark:text-[#86868b]">Pre-screened recommendations to expand deal volume</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {upsells.map((up) => (
+            <div
+              key={up.id}
+              className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.08] dark:border-white/[0.08] hover:border-[#0071e3]/40 dark:hover:border-white/[0.2] transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="text-[13px] font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">{up.name}</div>
+                <div className="text-[13px] text-[#1b7e36] dark:text-[#30d158] font-mono mt-1 font-medium whitespace-nowrap">{up.benefit}</div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between">
+                <span className="text-[13px] font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">{formatCurrency(up.price)}</span>
+                <Button onClick={() => addUpsell(up)} variant="secondary" size="xs" icon={Plus}>
+                  Add
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Total Aggregation */}
+      <div className="flex justify-end pt-2">
+        <div className="p-6 sm:p-7 rounded-[22px] bg-white/90 dark:bg-[#161618]/90 border border-black/[0.08] dark:border-white/[0.08] w-full sm:w-96 space-y-3.5 text-[13px] shadow-sm dark:shadow-apple-card backdrop-blur-xl">
+          <div className="flex justify-between text-[#6e6e73] dark:text-[#86868b]">
+            <span className="whitespace-nowrap">Subtotal:</span>
+            <span className="font-mono text-[#1d1d1f] dark:text-[#f5f5f7] font-semibold text-[13px] whitespace-nowrap">{formatCurrency(subtotal)}</span>
+          </div>
+          <div className="flex justify-between text-[#1b7e36] dark:text-[#30d158]">
+            <span className="whitespace-nowrap">Total Discount:</span>
+            <span className="font-mono font-semibold text-[13px] whitespace-nowrap">-{formatCurrency(totalDiscount)}</span>
+          </div>
+          <div className="pt-3.5 border-t border-black/[0.08] dark:border-white/[0.08] flex justify-between items-baseline">
+            <span className="text-[15px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] whitespace-nowrap">Net Contract Total:</span>
+            <span className="font-mono text-[#0071e3] dark:text-[#2997ff] text-[22px] font-bold whitespace-nowrap">{formatCurrency(grandTotal)}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

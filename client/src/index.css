@@ -1,3 +1,329 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --apple-bg: #000000;
+    --apple-text: #f5f5f7;
+    --apple-muted: #86868b;
+    --apple-card: rgba(22, 22, 24, 0.9);
+    --apple-border: rgba(255, 255, 255, 0.08);
+  }
+
+  html.light {
+    --apple-bg: #f5f5f7;
+    --apple-text: #1d1d1f;
+    --apple-muted: #6e6e73;
+    --apple-card: #ffffff;
+    --apple-border: rgba(0, 0, 0, 0.08);
+  }
+
+  body {
+    background-color: var(--apple-bg);
+    color: var(--apple-text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", system-ui, sans-serif;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.024em;
+    font-weight: 600;
+  }
+}
+
+/* =========================================================
+   WIREFRAME ARCHITECTURE DESIGN SPEC STYLES
+   ========================================================= */
+.spec-callout {
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  background-color: rgba(245, 158, 11, 0.05);
+  color: #b45309;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  transition: all 0.2s ease;
+}
+
+html.dark .spec-callout {
+  border-color: rgba(245, 158, 11, 0.35);
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
+}
+
+.spec-blue-header {
+  color: #0071e3;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+html.dark .spec-blue-header {
+  color: #2997ff;
+}
+
+/* =========================================================
+   LIGHT MODE COMPREHENSIVE ADAPTATIONS (Apple Light System)
+   ========================================================= */
+
+/* Canvas backgrounds */
+html.light body,
+html.light main,
+html.light div.min-h-screen:not(.auth-canvas) {
+  background-color: #f5f5f7 !important;
+  color: #1d1d1f !important;
+}
+
+html.light div.auth-canvas {
+  background-color: #ffffff !important;
+  color: #1d1d1f !important;
+}
+
+/* Minimal Underline Auth Inputs */
+html.light input.auth-minimal-input,
+html.dark input.auth-minimal-input,
+input.auth-minimal-input {
+  background-color: transparent !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+}
+
+html.dark input.auth-minimal-input {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+}
+
+html.light input.auth-minimal-input:focus {
+  border-bottom: 1px solid #1d1d1f !important;
+  box-shadow: none !important;
+}
+
+html.dark input.auth-minimal-input:focus {
+  border-bottom: 1px solid #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Auth Card Rounded Inputs */
+html.light input.auth-card-input,
+html.dark input.auth-card-input,
+input.auth-card-input {
+  height: 42px !important;
+  padding: 0 14px !important;
+  font-size: 13.5px !important;
+  border-radius: 12px !important;
+  border: 1.5px solid rgba(134, 239, 172, 0.8) !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  color: #111827 !important;
+  box-sizing: border-box !important;
+}
+
+html.dark input.auth-card-input {
+  background-color: rgba(7, 36, 24, 0.65) !important;
+  border: 1.5px solid rgba(0, 203, 160, 0.35) !important;
+  color: #ffffff !important;
+}
+
+html.light input.auth-card-input:focus {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #00cba0 !important;
+  box-shadow: 0 0 0 3px rgba(0, 203, 160, 0.18) !important;
+}
+
+html.dark input.auth-card-input:focus {
+  background-color: rgba(7, 36, 24, 0.85) !important;
+  border-color: #00cba0 !important;
+  box-shadow: 0 0 0 3px rgba(0, 203, 160, 0.25) !important;
+}
+
+/* Card surfaces */
+html.light [class*="bg-\[\#161618\]"],
+html.light [class*="bg-\[\#1c1c1e\]"],
+html.light [class*="bg-\[\#1a1a1d\]"],
+html.light [class*="bg-slate-900"],
+html.light [class*="bg-slate-950"] {
+  background-color: #ffffff !important;
+  color: #1d1d1f !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light [class*="bg-\[\#2c2c2e\]"] {
+  background-color: #e5e5ea !important;
+}
+
+/* Header & navigation (Transparent glass gesture) */
+html.light header {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Tables and headers */
+html.light thead,
+html.light thead[class*="bg-"],
+html.light th {
+  background-color: #f2f2f7 !important;
+  color: #6e6e73 !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html.light tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+html.light tbody td {
+  color: #1d1d1f !important;
+}
+
+html.light tbody td.text-apple-dim,
+html.light tbody td.text-apple-muted,
+html.light tbody td.text-\[\#86868b\] {
+  color: #6e6e73 !important;
+}
+
+/* Headings and labels */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #1d1d1f;
+}
+
+html.light .text-apple-muted,
+html.light .text-\[\#86868b\] {
+  color: #6e6e73;
+}
+
+html.light .text-apple-dim {
+  color: #6e6e73;
+}
+
+/* Inside light surfaces and cards, turn titles and paragraph text dark */
+html.light [class*="bg-\[\#161618\]"] .text-white,
+html.light [class*="bg-\[\#161618\]"] .text-\[\#f5f5f7\],
+html.light [class*="bg-\[\#1c1c1e\]"] .text-white,
+html.light [class*="bg-\[\#1c1c1e\]"] .text-\[\#f5f5f7\],
+html.light table .text-white,
+html.light table .text-\[\#f5f5f7\] {
+  color: #1d1d1f;
+}
+
+/* Borders and dividers */
+html.light [class*="border-white"],
+html.light [class*="border-white\/"] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light [class*="divide-white"],
+html.light [class*="divide-white\/"] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Subtle background layers */
+html.light [class*="bg-white\/\[0\.02\]"],
+html.light [class*="bg-white\/\[0\.03\]"],
+html.light [class*="bg-white\/\[0\.04\]"],
+html.light [class*="bg-white\/\[0\.06\]"] {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light [class*="bg-white\/\[0\.08\]"],
+html.light [class*="bg-white\/\[0\.09\]"],
+html.light [class*="bg-white\/\[0\.12\]"] {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Hover highlights */
+html.light [class*="hover\:bg-white\/\[0\.02\]"]:hover,
+html.light [class*="hover\:bg-white\/\[0\.03\]"]:hover,
+html.light [class*="hover\:bg-white\/\[0\.04\]"]:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+html.light [class*="hover\:bg-white\/\[0\.06\]"]:hover,
+html.light [class*="hover\:bg-white\/\[0\.1\]"]:hover,
+html.light [class*="hover\:bg-white\/\[0\.12\]"]:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Light mode text inputs, selects, textareas */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #1d1d1f !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #86868b !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #0071e3 !important;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15) !important;
+}
+
+html.light select option {
+  background-color: #ffffff !important;
+  color: #1d1d1f !important;
+}
+
+/* Stepper connectors */
+html.light .bg-white\/\[0\.1\] {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Callout cards in light mode */
+html.light [class*="bg-\[\#ff9f0a\]"] {
+  background-color: rgba(255, 159, 10, 0.08) !important;
+  border-color: rgba(255, 159, 10, 0.3) !important;
+  color: #1d1d1f !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 128, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 128, 0.4);
+}
+
+/* Apple glass utility */
+.apple-glass {
+  background: var(--apple-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--apple-border);
+}
+
+.apple-card {
+  background: var(--apple-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--apple-border);
+  border-radius: 16px;
+}

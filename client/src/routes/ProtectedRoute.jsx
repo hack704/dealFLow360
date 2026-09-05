@@ -7,8 +7,9 @@ export const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-xs text-slate-400 font-mono">
-        Verifying security token...
+      <div className="min-h-screen bg-[#fbfbfd] dark:bg-black flex flex-col items-center justify-center text-[13px] text-[#6e6e73] dark:text-[#86868b] font-mono gap-3">
+        <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+        <span>Verifying security token...</span>
       </div>
     );
   }

@@ -7,6 +7,13 @@ const Customer = require('../models/Customer');
 const Product = require('../models/Product');
 const DiscountRule = require('../models/DiscountRule');
 const Quotation = require('../models/Quotation');
+const ApprovalRequest = require('../models/ApprovalRequest');
+const ApprovalRule = require('../models/ApprovalRule');
+const Inventory = require('../models/Inventory');
+const Subscription = require('../models/Subscription');
+const Invoice = require('../models/Invoice');
+const DealHealth = require('../models/DealHealth');
+const PriceList = require('../models/PriceList');
 const { ROLES } = require('../config/constants');
 
 const seedData = async () => {
@@ -19,6 +26,13 @@ const seedData = async () => {
     await Product.deleteMany();
     await DiscountRule.deleteMany();
     await Quotation.deleteMany();
+    await ApprovalRequest.deleteMany();
+    await ApprovalRule.deleteMany();
+    await Inventory.deleteMany();
+    await Subscription.deleteMany();
+    await Invoice.deleteMany();
+    await DealHealth.deleteMany();
+    await PriceList.deleteMany();
 
     // 1. Seed Users
     const users = await User.create([
@@ -148,7 +162,7 @@ const seedData = async () => {
     ]);
     console.log(`[SEED] Created ${products.length} demo products`);
 
-    // 4. Seed Discount Rules
+    // 4. Seed Discount & Approval Rules
     await DiscountRule.create([
       {
         name: 'High Volume Enterprise Bracket',
@@ -166,8 +180,43 @@ const seedData = async () => {
       }
     ]);
 
-    // 5. Seed an initial Quotation for instant demoing
-    await Quotation.create({
+    await ApprovalRule.create([
+      {
+        name: 'Hardware Ceiling Rule',
+        category: 'Hardware',
+        maxDiscountCeiling: 15,
+        minMarginFloor: 20,
+        requiredApproverRole: 'sales_manager'
+      },
+      {
+        name: 'Software Ceiling Rule',
+        category: 'Software',
+        maxDiscountCeiling: 25,
+        minMarginFloor: 40,
+        requiredApproverRole: 'finance'
+      }
+    ]);
+
+    // 5. Seed Inventory across Warehouses
+    await Inventory.create([
+      {
+        product: products[0]._id,
+        sku: products[0].sku,
+        warehouse: 'Main Warehouse',
+        quantityOnHand: 45,
+        quantityReserved: 12
+      },
+      {
+        product: products[0]._id,
+        sku: products[0].sku,
+        warehouse: 'East Depot',
+        quantityOnHand: 18,
+        quantityReserved: 4
+      }
+    ]);
+
+    // 6. Seed Quotations
+    const quote1 = await Quotation.create({
       quotationNumber: 'QT-DEMO-2026',
       title: 'Acme Global Q1 Expansion Deal',
       customer: customers[0]._id,
@@ -219,7 +268,204 @@ const seedData = async () => {
       createdBy: users[0]._id
     });
 
-    console.log('[SEED] Demo data seeded successfully! 🚀');
+    const quote2 = await Quotation.create({
+      quotationNumber: 'Q-1042',
+      title: 'Acme Corp Fleet Refresh',
+      customer: customers[0]._id,
+      customerName: customers[0].name,
+      items: [
+        {
+          product: products[0]._id,
+          productName: 'Laptop Pro 14 (Hardware)',
+          sku: 'HW-LPT-14',
+          category: 'Hardware',
+          quantity: 18,
+          listPrice: 1200,
+          unitCost: 800,
+          discountPercent: 12,
+          discountAmount: 2592,
+          netUnitPrice: 1056,
+          lineTotal: 19008,
+          marginAmount: 4608,
+          marginPercent: 24.2
+        },
+        {
+          product: products[4]._id,
+          productName: 'Onsite Setup Service',
+          sku: 'SV-SETUP',
+          category: 'Services',
+          quantity: 1,
+          listPrice: 450,
+          unitCost: 150,
+          discountPercent: 18,
+          discountAmount: 81,
+          netUnitPrice: 369,
+          lineTotal: 369,
+          marginAmount: 219,
+          marginPercent: 59.3
+        }
+      ],
+      subtotal: 22050,
+      totalCost: 14550,
+      totalDiscountAmount: 2673,
+      totalDiscountPercent: 12.1,
+      grandTotal: 19377,
+      blendedMarginPercent: 24.9,
+      riskScore: 54,
+      riskLevel: 'moderate',
+      requiresApproval: true,
+      approvalReason: 'Onsite Setup Service: 18% discount exceeds standard 10% limit',
+      status: 'pending_approval',
+      paymentTermsDays: 30,
+      createdBy: users[0]._id
+    });
+
+    // 7. Seed Approval Request
+    await ApprovalRequest.create({
+      quotation: quote2._id,
+      quotationNumber: quote2.quotationNumber,
+      customerName: quote2.customerName,
+      submittedBy: users[0]._id,
+      submitterName: users[0].name,
+      dealValue: quote2.grandTotal,
+      blendedMarginPercent: quote2.blendedMarginPercent,
+      maxDiscountPercent: 18,
+      riskScore: quote2.riskScore,
+      currentStage: 'Sales Manager',
+      flaggedLines: [
+        {
+          productName: 'Laptop Pro 14',
+          discountGiven: 12,
+          limitAllowed: 15,
+          isOver: false
+        },
+        {
+          productName: 'Onsite Setup Service',
+          discountGiven: 18,
+          limitAllowed: 10,
+          isOver: true
+        }
+      ],
+      status: 'pending',
+      auditTrail: [
+        {
+          user: users[0].name,
+          action: 'Submitted',
+          note: 'Submitted 18% discount exception for Acme competitive bid.'
+        }
+      ]
+    });
+
+    // 8. Seed Subscriptions
+    await Subscription.create([
+      {
+        subscriptionNumber: 'SUB-1042',
+        quotation: quote1._id,
+        customer: customers[0]._id,
+        customerName: customers[0].name,
+        planName: 'Care Plan 2yr',
+        billingCycle: 'Monthly',
+        amount: 46,
+        status: 'Active',
+        startDate: new Date(),
+        nextBillDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+      },
+      {
+        subscriptionNumber: 'SUB-1043',
+        quotation: quote1._id,
+        customer: customers[1]._id,
+        customerName: customers[1].name,
+        planName: 'Support SLA Platinum',
+        billingCycle: 'Quarterly',
+        amount: 300,
+        status: 'Active',
+        startDate: new Date(),
+        nextBillDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)
+      }
+    ]);
+
+    // 9. Seed Invoices
+    await Invoice.create([
+      {
+        invoiceNumber: 'INV-1042',
+        quotation: quote2._id,
+        customer: customers[0]._id,
+        customerName: customers[0].name,
+        type: 'One-Time Order',
+        items: [
+          { item: 'Laptop Pro 14 (Hardware)', quantity: 2, unitPrice: 1200, discountPercent: 10, total: 2160 },
+          { item: 'Onsite Setup Service', quantity: 1, unitPrice: 450, discountPercent: 0, total: 450 }
+        ],
+        subtotal: 2610,
+        taxAmount: 120,
+        grandTotal: 2730,
+        status: 'Unpaid',
+        dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
+      },
+      {
+        invoiceNumber: 'INV-1043',
+        quotation: quote1._id,
+        customer: customers[0]._id,
+        customerName: customers[0].name,
+        type: 'Recurring Monthly',
+        items: [
+          { item: 'Care Plan 2yr (Cycle 1 of 24)', quantity: 1, unitPrice: 46, discountPercent: 0, total: 46 }
+        ],
+        subtotal: 46,
+        taxAmount: 0,
+        grandTotal: 46,
+        status: 'Paid',
+        dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+        paidAt: new Date()
+      }
+    ]);
+
+    // 10. Seed Deal Health
+    await DealHealth.create([
+      {
+        quotation: quote2._id,
+        quotationNumber: 'Q-1042',
+        customerName: 'Acme Corp',
+        salesRepName: 'J. Rao',
+        dealValue: 28400,
+        issue: 'Split delivery delayed +4 days',
+        issueType: 'slippage',
+        riskScore: 54,
+        actionTaken: 'Warehouse notice sent',
+        actionStatus: 'pending'
+      },
+      {
+        quotationNumber: 'Q-1030',
+        customerName: 'Zenith Co',
+        salesRepName: 'J. Rao',
+        dealValue: 18300,
+        issue: 'Idle 9 days without customer activity',
+        issueType: 'stalled',
+        riskScore: 68,
+        actionTaken: 'Nudge sent',
+        actionStatus: 'done'
+      },
+      {
+        quotationNumber: 'Q-1025',
+        customerName: 'Delta LLC',
+        salesRepName: 'M. Chen',
+        dealValue: 34900,
+        issue: 'Discount 22% vs avg 8%',
+        issueType: 'discount',
+        riskScore: 84,
+        actionTaken: 'Escalated to Manager',
+        actionStatus: 'pending'
+      }
+    ]);
+
+    // 11. Seed Price Lists
+    await PriceList.create([
+      { name: 'Standard Bronze Tier', tier: 'Bronze', currency: 'USD', priceRule: 'Price, no adjustment' },
+      { name: 'Preferred Gold Tier', tier: 'Gold', currency: 'USD', priceRule: 'Price minus 10 percent base', discountModifierPercent: 10 },
+      { name: 'Enterprise Partner Tier', tier: 'Enterprise Partner', currency: 'USD', priceRule: 'Price minus 18 percent base', discountModifierPercent: 18 }
+    ]);
+
+    console.log('[SEED] Demo data seeded successfully across all modules! 🚀');
     if (require.main === module) {
       process.exit(0);
     }

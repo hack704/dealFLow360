@@ -68,19 +68,19 @@ export const QuotationBuilderPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.08] dark:border-white/[0.08] pb-5">
         <div>
           <button
             onClick={() => navigate('/quotations')}
-            className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 mb-1 transition-colors"
+            className="text-[13px] text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] inline-flex items-center gap-2 mb-2 transition-colors font-medium"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-4 h-4" />
             <span>Back to all quotes</span>
           </button>
-          <h2 className="text-xl font-bold text-white tracking-tight">Configure, Price, Quote (CPQ) Builder</h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <h2 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">Configure, Price, Quote (CPQ) Builder</h2>
+          <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
             Build enterprise proposals with live volume curves, blended margin risk guardrails, and automated discount rules.
           </p>
         </div>
@@ -90,6 +90,7 @@ export const QuotationBuilderPage = () => {
             onClick={() => handleSaveQuote('draft')}
             disabled={saving || items.length === 0}
             variant="outline"
+            size="md"
             icon={Save}
           >
             Save Draft
@@ -100,8 +101,8 @@ export const QuotationBuilderPage = () => {
             disabled={saving || items.length === 0}
             loading={saving}
             variant="primary"
+            size="md"
             icon={Send}
-            className="shadow-lg shadow-indigo-950"
           >
             {calculation?.requiresApproval ? 'Submit for Approval' : 'Generate Official Quote'}
           </Button>
@@ -109,14 +110,14 @@ export const QuotationBuilderPage = () => {
       </div>
 
       {successMessage && (
-        <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center space-x-2">
-          <CheckCircle className="w-5 h-5 shrink-0 text-emerald-400" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#34c759]/10 border border-[#34c759]/30 text-[#1b7a36] dark:text-[#30d158] text-[13px] flex items-center space-x-3">
+          <CheckCircle className="w-5 h-5 shrink-0 text-[#34c759] dark:text-[#30d158]" />
           <span className="font-semibold">{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#ff453a]/10 border border-[#ff453a]/30 text-[#c9342c] dark:text-[#ff453a] text-[13px]">
           {errorMessage}
         </div>
       )}
@@ -125,7 +126,7 @@ export const QuotationBuilderPage = () => {
       <QuotationForm />
 
       {/* Two Column Workspace: Left = Items & Upsells, Right = Financial Summary & Risk */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           <QuotationItemsTable />
