@@ -51,7 +51,17 @@ const confirmSplit = async (req, res, next) => {
   try {
     const { splits } = req.body;
     const result = await confirmSplitAllocation(req.params.id, splits);
-    return sendSuccess(res, result, 'Fulfillment split confirmed and logged');
+
+    // Automatically generate billing documents (invoice + subscription) upon fulfillment confirmation
+    try {
+      const { generateBillingFromQuotation } = require('../services/billing/billingEngine');
+      const billing = await generateBillingFromQuotation(req.params.id);
+      result.billing = billing;
+    } catch (billErr) {
+      console.warn('[FULFILLMENT] Auto-billing generation notice:', billErr.message);
+    }
+
+    return sendSuccess(res, result, 'Fulfillment split confirmed and billing generated');
   } catch (error) {
     next(error);
   }

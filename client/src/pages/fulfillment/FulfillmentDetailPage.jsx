@@ -6,6 +6,7 @@ import Badge from '../../components/common/Badge';
 import { ArrowLeft, CheckCircle2, Split, SlidersHorizontal, AlertCircle, Loader2, Receipt } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import fulfillmentService from '../../services/fulfillmentService';
+import billingService from '../../services/billingService';
 
 export const FulfillmentDetailPage = () => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ export const FulfillmentDetailPage = () => {
 
   const [confirmed, setConfirmed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [navigating, setNavigating] = useState(false);
   const [orderData, setOrderData] = useState(null);
   const [splitRows, setSplitRows] = useState([
     { warehouse: 'Main Warehouse', qtyFulfilled: '18 units', estShipments: 1, cost: 42 },
@@ -44,10 +46,27 @@ export const FulfillmentDetailPage = () => {
   const handleConfirmSplit = async () => {
     try {
       await fulfillmentService.confirmSplit(orderId, splitRows);
+      try {
+        await billingService.generateBilling(orderId);
+      } catch (bErr) {
+        console.warn('Billing auto-generate note:', bErr.message);
+      }
       setConfirmed(true);
     } catch (err) {
       console.warn('Split confirmation local fallback:', err.message);
       setConfirmed(true);
+    }
+  };
+
+  const handleProceedToBilling = async () => {
+    setNavigating(true);
+    try {
+      await billingService.generateBilling(orderId);
+    } catch (bErr) {
+      console.warn('Billing generate note:', bErr.message);
+    } finally {
+      setNavigating(false);
+      navigate('/invoices');
     }
   };
 
@@ -91,12 +110,13 @@ export const FulfillmentDetailPage = () => {
           </Button>
 
           <Button
-            onClick={() => navigate('/invoices')}
+            onClick={handleProceedToBilling}
             variant="secondary"
             size="md"
             icon={Receipt}
+            disabled={navigating}
           >
-            Go to Invoices &rarr;
+            {navigating ? 'Generating...' : 'Go to Invoices →'}
           </Button>
         </div>
       </div>
@@ -105,14 +125,15 @@ export const FulfillmentDetailPage = () => {
         <div className="p-4 sm:p-5 rounded-2xl bg-[#34c759]/10 dark:bg-[#30d158]/15 border border-[#34c759]/30 text-[13px] text-[#1b7a36] dark:text-[#30d158] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span className="font-semibold">Fulfillment split confirmed. Warehouse dispatch queues updated.</span>
+            <span className="font-semibold">Fulfillment split confirmed. Warehouse dispatch queues updated & invoice generated.</span>
           </div>
           <Button
             size="sm"
             variant="primary"
-            onClick={() => navigate('/invoices')}
+            onClick={handleProceedToBilling}
+            disabled={navigating}
           >
-            Proceed to Invoices & Billing &rarr;
+            {navigating ? 'Generating Invoice...' : 'Proceed to Invoices & Billing →'}
           </Button>
         </div>
       )}

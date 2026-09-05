@@ -19,10 +19,10 @@ const generateBillingFromQuotation = async (quotationId) => {
   }
   if (!quote) throw new Error('Quotation not found');
 
-  // Check if invoice or subscription already exists
+  // Check if invoice and subscription already exist
   let existingInvoice = await Invoice.findOne({ quotation: quote._id }).populate('customer quotation');
   let existingSubscription = await Subscription.findOne({ quotation: quote._id }).populate('customer');
-  if (existingInvoice || existingSubscription) {
+  if (existingInvoice && existingSubscription) {
     return {
       invoice: existingInvoice,
       subscription: existingSubscription
@@ -47,8 +47,8 @@ const generateBillingFromQuotation = async (quotationId) => {
 
   const customerId = quote.customer ? (quote.customer._id || quote.customer) : null;
 
-  let createdInvoice = null;
-  if (oneTimeItems.length > 0) {
+  let createdInvoice = existingInvoice;
+  if (!createdInvoice && oneTimeItems.length > 0) {
     const subtotal = oneTimeItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.netUnitPrice) || 0), 0);
     const tax = roundTwoDecimals(subtotal * 0.08); // 8% tax
     const invoiceNum = `INV-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -74,8 +74,8 @@ const generateBillingFromQuotation = async (quotationId) => {
     });
   }
 
-  let createdSubscription = null;
-  if (recurringItems.length > 0) {
+  let createdSubscription = existingSubscription;
+  if (!createdSubscription && recurringItems.length > 0) {
     const recurringAmount = recurringItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.netUnitPrice) || 0), 0);
     const subNum = `SUB-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -92,6 +92,36 @@ const generateBillingFromQuotation = async (quotationId) => {
       nextBillDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       history: [{ action: 'Created from Quote', notes: `Generated from ${quote.quotationNumber}` }]
     });
+  }
+
+  // If no one-time invoice was created, generate an initial billing invoice for recurring or all items
+  if (!createdInvoice) {
+    const itemsToBill = recurringItems.length > 0 ? recurringItems : (quote.items || []);
+    if (itemsToBill.length > 0) {
+      const subtotal = itemsToBill.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.netUnitPrice) || (quote.grandTotal || 0)), 0) || (quote.grandTotal || 0);
+      const tax = roundTwoDecimals(subtotal * 0.08);
+      const invoiceNum = `INV-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      createdInvoice = await Invoice.create({
+        invoiceNumber: invoiceNum,
+        quotation: quote._id,
+        customer: customerId,
+        customerName: quote.customerName || (quote.customer && quote.customer.name) || 'Customer',
+        type: recurringItems.length > 0 ? 'Recurring Monthly' : 'One-Time Order',
+        items: itemsToBill.map((it) => ({
+          item: it.productName || 'Line Item',
+          quantity: it.quantity || 1,
+          unitPrice: it.listPrice || 0,
+          discountPercent: it.discountPercent || 0,
+          total: it.lineTotal || 0
+        })),
+        subtotal,
+        taxAmount: tax,
+        grandTotal: roundTwoDecimals(subtotal + tax),
+        status: 'Unpaid',
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      });
+    }
   }
 
   return {
