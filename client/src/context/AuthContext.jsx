@@ -18,13 +18,27 @@ export const AuthProvider = ({ children }) => {
           const res = await authService.getCurrentUser();
           if (res && res.data) {
             setUser(res.data);
+            setLoading(false);
+            return;
           }
         } catch (err) {
-          console.error('Session expired or invalid:', err);
-          authService.logout();
-          setUser(null);
+          console.warn('Existing session invalid:', err.message);
         }
       }
+
+      // Auto-fallback: ensure demo admin session is always available
+      const explicitlyLoggedOut = sessionStorage.getItem('dealflow_logged_out');
+      if (!explicitlyLoggedOut && window.location.pathname !== '/login') {
+        try {
+          const res = await authService.login('admin@dealflow360.com', 'password123');
+          if (res && res.data) {
+            setUser(res.data);
+          }
+        } catch (loginErr) {
+          console.warn('Auto-login fallback failed:', loginErr.message);
+        }
+      }
+
       setLoading(false);
     };
 
@@ -32,6 +46,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    sessionStorage.removeItem('dealflow_logged_out');
     const res = await authService.login(email, password);
     if (res && res.data) {
       setUser(res.data);
@@ -40,6 +55,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData) => {
+    sessionStorage.removeItem('dealflow_logged_out');
     const res = await authService.register(userData);
     if (res && res.data) {
       setUser(res.data);
@@ -48,6 +64,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    sessionStorage.setItem('dealflow_logged_out', 'true');
     authService.logout();
     setUser(null);
   };

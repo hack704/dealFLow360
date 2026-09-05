@@ -37,6 +37,7 @@ const seedData = async () => {
     // 1. Seed Users
     const users = await User.create([
       {
+        _id: '660000000000000000000001',
         name: 'Alex Rivera',
         email: 'alex@dealflow360.com',
         password: 'password123',
@@ -44,6 +45,7 @@ const seedData = async () => {
         department: 'Enterprise Sales'
       },
       {
+        _id: '660000000000000000000002',
         name: 'Sarah Vance',
         email: 'sarah@dealflow360.com',
         password: 'password123',
@@ -51,6 +53,7 @@ const seedData = async () => {
         department: 'Sales Leadership'
       },
       {
+        _id: '660000000000000000000003',
         name: 'Marcus Chen',
         email: 'admin@dealflow360.com',
         password: 'password123',
