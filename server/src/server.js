@@ -27,6 +27,29 @@ const startServer = async () => {
     console.log(`[INFO] DealFlow360 Server running on port ${PORT}`);
   });
 
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[ERROR] Port ${PORT} is already in use.`);
+    } else {
+      console.error('[ERROR] Server error:', err.message);
+    }
+  });
+
+  const shutdown = (signal) => {
+    server.close(() => {
+      console.log(`[INFO] Closed server on ${signal}`);
+      if (signal === 'SIGUSR2') {
+        process.kill(process.pid, 'SIGUSR2');
+      } else {
+        process.exit(0);
+      }
+    });
+  };
+
+  process.once('SIGUSR2', () => shutdown('SIGUSR2'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+
   return server;
 };
 
