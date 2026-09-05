@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Invoice = require('../models/Invoice');
 const Subscription = require('../models/Subscription');
 const { generateBillingFromQuotation, calculateProration } = require('../services/billing/billingEngine');
@@ -18,7 +19,7 @@ const getInvoices = async (req, res, next) => {
       .populate('customer', 'name industry tier')
       .sort({ createdAt: -1 });
 
-    return sendSuccess(res, invoices, 'Invoices retrieved');
+    return sendSuccess(res, invoices, 'Invoices list retrieved');
   } catch (error) {
     next(error);
   }
@@ -28,7 +29,10 @@ const getInvoices = async (req, res, next) => {
 // @route   GET /api/billing/invoices/:id
 const getInvoiceById = async (req, res, next) => {
   try {
-    let invoice = await Invoice.findById(req.params.id).populate('customer quotation');
+    let invoice = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      invoice = await Invoice.findById(req.params.id).populate('customer quotation');
+    }
     if (!invoice) {
       invoice = await Invoice.findOne({ invoiceNumber: req.params.id }).populate('customer quotation');
     }
@@ -46,7 +50,10 @@ const getInvoiceById = async (req, res, next) => {
 const recordPayment = async (req, res, next) => {
   try {
     const { method = 'Credit Card', transactionId = 'TXN-98421' } = req.body;
-    let invoice = await Invoice.findById(req.params.id);
+    let invoice = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      invoice = await Invoice.findById(req.params.id);
+    }
     if (!invoice) {
       invoice = await Invoice.findOne({ invoiceNumber: req.params.id });
     }
@@ -91,7 +98,10 @@ const getSubscriptions = async (req, res, next) => {
 // @route   GET /api/billing/subscriptions/:id
 const getSubscriptionById = async (req, res, next) => {
   try {
-    let sub = await Subscription.findById(req.params.id).populate('customer');
+    let sub = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      sub = await Subscription.findById(req.params.id).populate('customer');
+    }
     if (!sub) {
       sub = await Subscription.findOne({ subscriptionNumber: req.params.id }).populate('customer');
     }
