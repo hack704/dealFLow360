@@ -97,7 +97,7 @@ export const InvoicesPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.08] dark:border-white/[0.08] pb-5">
         <div>
-          <h1 className="text-[26px] sm:text-[28px] font-bold tracking-[-0.025em] text-[#1d1d1f] dark:text-[#f5f5f7]">12. Invoices (List)</h1>
+          <h1 className="text-[26px] sm:text-[28px] font-bold tracking-[-0.025em] text-[#1d1d1f] dark:text-[#f5f5f7]">Invoices</h1>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
             Every invoice generated from one-time and recurring orders
           </p>
@@ -133,7 +133,7 @@ export const InvoicesPage = () => {
                 : 'text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white border border-transparent'
             }`}
           >
-            All ({invoices.length})
+            All · {invoices.length}
           </button>
         </div>
       </div>

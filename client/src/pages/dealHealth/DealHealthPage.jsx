@@ -147,8 +147,9 @@ export const DealHealthPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Stalled Deals</h3>
-          <div className="text-[26px] font-bold font-mono text-[#9e5200] dark:text-[#ff9f0a] mt-1">
-            5 quotes idle 7+ days
+          <div className="flex items-baseline gap-1.5 mt-1 font-mono">
+            <span className="text-[24px] font-bold text-[#9e5200] dark:text-[#ff9f0a]">5</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">quotes idle 7+ days</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Average deal stall latency: 8.4 days vs 2.1 day target SLA.
@@ -164,8 +165,9 @@ export const DealHealthPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Discount Anomalies</h3>
-          <div className="text-[26px] font-bold font-mono text-[#c9342c] dark:text-[#ff453a] mt-1">
-            2 above rep average
+          <div className="flex items-baseline gap-1.5 mt-1 font-mono">
+            <span className="text-[24px] font-bold text-[#c9342c] dark:text-[#ff453a]">2</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">above rep average</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Proposals exceeding maximum peer group discount band by +14pt.
@@ -181,8 +183,9 @@ export const DealHealthPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Delivery Slippage</h3>
-          <div className="text-[26px] font-bold font-mono text-[#0071e3] dark:text-[#2997ff] mt-1">
-            3 promise dates at risk
+          <div className="flex items-baseline gap-1.5 mt-1 font-mono">
+            <span className="text-[24px] font-bold text-[#0071e3] dark:text-[#2997ff]">3</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">promise dates at risk</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Warehouse split buffer deficit may delay contractual arrival.

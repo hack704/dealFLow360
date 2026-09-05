@@ -37,7 +37,7 @@ export const BillingDetailPage = () => {
           </button>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-              10. Billing Detail: Acme Corp - Care Plan 2yr
+              Billing Detail: Acme Corp — Care Plan 2yr
             </h1>
             <Badge variant="success" size="sm">
               Active Recurring
@@ -74,10 +74,10 @@ export const BillingDetailPage = () => {
         </div>
       )}
 
-      {/* Section 1: One-Time Lines (from originating order) */}
+      {/* Section 1: One-Time Lines — Originating Order */}
       <Card className="p-0 overflow-hidden rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] shadow-sm dark:shadow-apple-card backdrop-blur-xl">
         <div className="p-5 sm:p-6 pb-4 border-b border-black/[0.08] dark:border-white/[0.08]">
-          <CardTitle className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">One-Time Lines (from originating order)</CardTitle>
+          <CardTitle className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">One-Time Lines — Originating Order</CardTitle>
         </div>
 
         <div className="overflow-x-auto">

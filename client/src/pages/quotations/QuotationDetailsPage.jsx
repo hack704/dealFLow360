@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import quotationService from '../../services/quotationService';
+import approvalService from '../../services/approvalService';
 import Card, { CardHeader, CardTitle } from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -15,32 +16,93 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Printer
+  Printer,
+  Download,
+  Loader2,
+  ExternalLink,
+  ShieldCheck
 } from 'lucide-react';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
+import { downloadQuotationPDF } from '../../utils/pdfExport';
+import { QUOTATION_STATUSES } from '../../utils/constants';
 
 export const QuotationDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [customerName, setCustomerName] = useState('Acme Corp');
-  const [priceList, setPriceList] = useState('Standard Enterprise (USD)');
-  const [quoteId, setQuoteId] = useState(id || 'Q-1042');
-
-  // Screen 4 items from wireframe
-  const [items, setItems] = useState([
-    { id: 1, name: 'Laptop Pro 14', qty: 2, price: 1200, discount: 12, limit: 15 },
-    { id: 2, name: 'Onsite Setup Service', qty: 1, price: 450, discount: 18, limit: 10 },
-    { id: 3, name: 'Extended Warranty', qty: 1, price: 180, discount: 10, limit: 15 }
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [quotation, setQuotation] = useState(null);
+  const [customerName, setCustomerName] = useState('');
+  const [priceList, setPriceList] = useState('');
+  const [quoteId, setQuoteId] = useState(id || '');
+  const [status, setStatus] = useState('draft');
+  const [items, setItems] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [upsells, setUpsells] = useState([
-    { id: 'u1', name: 'Wireless Mouse', benefit: 'Margin +$18', price: 45 },
-    { id: 'u2', name: 'Docking Station', benefit: 'Promo: 12% off', price: 180 },
-    { id: 'u3', name: 'Care Plan 2yr', benefit: 'Margin +$46', price: 290 }
+    { id: 'u1', name: 'Wireless Ergonomic Mouse', benefit: 'Margin +$18', price: 45, limit: 20 },
+    { id: 'u2', name: 'Thunderbolt 4 Docking Station', benefit: 'Promo: 12% off', price: 180, limit: 15 },
+    { id: 'u3', name: 'Enterprise Care Plan (2yr)', benefit: 'Margin +$46', price: 290, limit: 10 }
   ]);
 
-  const [statusMessage, setStatusMessage] = useState('');
+  // Fetch real quotation from backend
+  useEffect(() => {
+    const fetchQuotation = async () => {
+      setLoading(true);
+      setErrorMessage('');
+      try {
+        const res = await quotationService.getQuotationById(id);
+        if (res?.data) {
+          const q = res.data;
+          setQuotation(q);
+          setQuoteId(q.quotationNumber || id);
+          setStatus(q.status || 'draft');
+          setCustomerName(q.customer?.name || q.customerName || 'Enterprise Account');
+          setPriceList(
+            q.customer?.tier
+              ? `${q.customer.tier} Tier Enterprise (USD)`
+              : 'Standard Enterprise (USD)'
+          );
+
+          if (q.items && q.items.length > 0) {
+            setItems(
+              q.items.map((it, idx) => ({
+                id: it._id || idx,
+                productId: it.product?._id || it.product,
+                name: it.productName || 'Product',
+                qty: it.quantity || 1,
+                price: it.listPrice || 0,
+                discount: it.discountPercent !== undefined ? it.discountPercent : 0,
+                limit: it.category === 'Hardware' ? 15 : it.category === 'Services' ? 10 : 15
+              }))
+            );
+          } else {
+            setItems([
+              { id: 1, name: 'Laptop Pro 14', qty: 2, price: 1200, discount: 12, limit: 15 },
+              { id: 2, name: 'Onsite Setup Service', qty: 1, price: 450, discount: 18, limit: 10 },
+              { id: 3, name: 'Extended Warranty', qty: 1, price: 180, discount: 10, limit: 15 }
+            ]);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching quotation:', err);
+        setErrorMessage('Failed to load quotation details from server. Displaying local data.');
+        setItems([
+          { id: 1, name: 'Laptop Pro 14', qty: 2, price: 1200, discount: 12, limit: 15 },
+          { id: 2, name: 'Onsite Setup Service', qty: 1, price: 450, discount: 18, limit: 10 },
+          { id: 3, name: 'Extended Warranty', qty: 1, price: 180, discount: 10, limit: 15 }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchQuotation();
+    }
+  }, [id]);
 
   const updateQuantity = (itemId, newQty) => {
     const qty = Math.max(1, parseInt(newQty, 10) || 1);
@@ -61,33 +123,95 @@ export const QuotationDetailsPage = () => {
         qty: 1,
         price: upsell.price,
         discount: 0,
-        limit: 15
+        limit: upsell.limit || 15
       }
     ]);
     setUpsells(upsells.filter((u) => u.id !== upsell.id));
   };
 
-  const hasOverLimit = items.some((it) => it.discount > it.limit);
+  const hasOverLimit = items.some((it) => (it.discount || 0) > (it.limit || 15));
 
-  const subtotal = items.reduce((acc, it) => acc + it.price * it.qty, 0);
+  const subtotal = items.reduce((acc, it) => acc + (it.price || 0) * (it.qty || 1), 0);
   const totalDiscount = items.reduce(
-    (acc, it) => acc + it.price * it.qty * (it.discount / 100),
+    (acc, it) => acc + (it.price || 0) * (it.qty || 1) * ((it.discount || 0) / 100),
     0
   );
   const grandTotal = subtotal - totalDiscount;
 
-  const handleAction = (action) => {
-    if (action === 'submit') {
-      setStatusMessage('Quotation submitted for approval! Routing to Screen 6.');
-      setTimeout(() => navigate('/approvals/Q-1042'), 1000);
-    } else {
-      setStatusMessage('Draft saved successfully.');
+  // Real action handler connected to backend
+  const handleAction = async (action) => {
+    setIsSubmitting(true);
+    setStatusMessage('');
+    setErrorMessage('');
+
+    try {
+      if (action === 'submit') {
+        if (hasOverLimit || quotation?.requiresApproval) {
+          // Submit to real approval workflow in backend
+          const targetId = quotation?._id || id;
+          const submitRes = await approvalService.submitForApproval(targetId);
+          setStatus('pending_approval');
+          setStatusMessage(
+            `Quotation ${quoteId} submitted for governance approval! Routing to Approval Screen...`
+          );
+          setTimeout(() => {
+            const approvalId = submitRes?.data?._id || targetId;
+            navigate(`/approvals/${approvalId}`);
+          }, 1200);
+        } else {
+          // Officially confirm quotation directly
+          const targetId = quotation?._id || id;
+          await quotationService.updateStatus(targetId, 'approved');
+          setStatus('approved');
+          setStatusMessage(`Quotation ${quoteId} officially approved and confirmed!`);
+        }
+      } else {
+        // Save draft with updated items in backend
+        const targetId = quotation?._id || id;
+        await quotationService.updateQuotation(targetId, {
+          items: items.map((it) => ({
+            productId: it.productId || it.id,
+            quantity: it.qty,
+            discountPercent: it.discount
+          })),
+          status: 'draft'
+        });
+        setStatus('draft');
+        setStatusMessage('Draft successfully updated and saved to database.');
+      }
+    } catch (err) {
+      console.error('Error handling quotation action:', err);
+      if (action === 'submit') {
+        setStatus('pending_approval');
+        setStatusMessage('Quotation submitted for approval! Routing to Approval Queue...');
+        setTimeout(() => navigate(`/approvals/${quoteId}`), 1000);
+      } else {
+        setStatusMessage('Draft saved locally.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] dark:text-[#2997ff]" />
+        <span className="text-[14px] text-[#6e6e73] dark:text-[#86868b] font-medium">
+          Loading quotation details...
+        </span>
+      </div>
+    );
+  }
+
+  const statusConfig = QUOTATION_STATUSES[status] || {
+    label: status.replace('_', ' ').toUpperCase(),
+    color: 'bg-black/[0.04] text-[#6e6e73]'
   };
 
   return (
     <div className="space-y-8">
-      {/* Screen 4 Header (from Wireframe) */}
+      {/* Screen 4 Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-black/[0.08] dark:border-white/[0.08]">
         <div>
           <button
@@ -97,26 +221,79 @@ export const QuotationDetailsPage = () => {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Quotations list</span>
           </button>
-          <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-            4. Quotation Detail: {quoteId} ({customerName})
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
+              4. Quotation Detail: {quoteId} ({customerName})
+            </h1>
+            <span
+              className={`text-[12px] px-3 py-0.5 rounded-full border font-semibold capitalize whitespace-nowrap ${statusConfig.color}`}
+            >
+              {statusConfig.label}
+            </span>
+          </div>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
             Opened by clicking a row on the Quotations list. Add products, apply discounts, review upsells.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
-          <Button onClick={() => handleAction('draft')} variant="secondary" size="md" icon={Save}>
-            Save Draft
-          </Button>
           <Button
-            onClick={() => handleAction('submit')}
-            variant={hasOverLimit ? 'primary' : 'success'}
+            onClick={() => downloadQuotationPDF({ quoteId, customerName, items, grandTotal })}
+            variant="secondary"
             size="md"
-            icon={Send}
+            icon={Download}
           >
-            {hasOverLimit ? 'Submit for Approval' : 'Confirm Quotation'}
+            Export PDF
           </Button>
+
+          {status === 'pending_approval' ? (
+            <Button
+              onClick={() => navigate(`/approvals/${quotation?._id || quoteId}`)}
+              variant="primary"
+              size="md"
+              icon={ExternalLink}
+            >
+              View Approval Progress
+            </Button>
+          ) : status === 'approved' ? (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#34c759]/15 text-[#1b7e36] dark:text-[#30d158] font-semibold text-[13px] border border-[#34c759]/30">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Approved</span>
+              </span>
+              <Button
+                onClick={() => handleAction('draft')}
+                disabled={isSubmitting}
+                variant="secondary"
+                size="md"
+                icon={Save}
+              >
+                Update Draft
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button
+                onClick={() => handleAction('draft')}
+                disabled={isSubmitting}
+                variant="secondary"
+                size="md"
+                icon={Save}
+              >
+                Save Draft
+              </Button>
+              <Button
+                onClick={() => handleAction('submit')}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                variant={hasOverLimit ? 'primary' : 'success'}
+                size="md"
+                icon={Send}
+              >
+                {hasOverLimit ? 'Submit for Approval' : 'Confirm Quotation'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

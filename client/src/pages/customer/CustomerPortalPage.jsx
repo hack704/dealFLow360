@@ -89,13 +89,13 @@ export const CustomerPortalPage = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-[1400px] mx-auto space-y-6 pb-12">
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.08] dark:border-white/[0.08] pb-5">
         <div>
           <div className="flex items-center space-x-3">
             <h1 className="text-[26px] sm:text-[28px] font-bold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
-              Customer Portal Negotiation Screen
+              Customer Negotiation Portal
             </h1>
             <Badge variant="warning" size="sm" className="font-mono">
               Status: {quotation.status}

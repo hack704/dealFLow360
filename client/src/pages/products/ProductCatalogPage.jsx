@@ -143,8 +143,9 @@ export const ProductCatalogPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Total Products</h3>
-          <div className="text-[26px] font-bold font-mono text-[#1d1d1f] dark:text-white mt-1">
-            128 active, 6 archived
+          <div className="flex items-baseline gap-1.5 mt-1 font-mono">
+            <span className="text-[24px] font-bold text-[#1d1d1f] dark:text-white">128</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">active · 6 archived</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Spanning hardware, cloud licenses, professional services.
@@ -159,8 +160,9 @@ export const ProductCatalogPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Pricelists</h3>
-          <div className="text-[26px] font-bold font-mono text-[#1b7e36] dark:text-[#30d158] mt-1">
-            3 tiers, 2 currencies
+          <div className="flex items-baseline gap-1.5 mt-1 font-mono">
+            <span className="text-[24px] font-bold text-[#1b7e36] dark:text-[#30d158]">3</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">tiers · 2 currencies</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             USD & EUR multi-currency pricing with automated rate sync.
@@ -175,8 +177,9 @@ export const ProductCatalogPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Variants</h3>
-          <div className="text-[26px] font-bold font-mono text-[#79349e] dark:text-[#bf5af2] mt-1">
-            340 SKUs across all products
+          <div className="flex items-baseline gap-1.5 mt-1 font-mono">
+            <span className="text-[24px] font-bold text-[#79349e] dark:text-[#bf5af2]">340</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">SKUs across all products</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Color, RAM, storage, CPU, and deployment region options.

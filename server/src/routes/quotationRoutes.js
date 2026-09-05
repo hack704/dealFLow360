@@ -5,6 +5,7 @@ const {
   createQuotation,
   getQuotations,
   getQuotationById,
+  updateQuotation,
   updateQuotationStatus
 } = require('../controllers/quotationController');
 const { protect } = require('../middleware/authMiddleware');
@@ -16,7 +17,8 @@ router.route('/')
   .post(protect, createQuotation);
 
 router.route('/:id')
-  .get(getQuotationById);
+  .get(getQuotationById)
+  .put(protect, updateQuotation);
 
 router.patch('/:id/status', protect, updateQuotationStatus);
 

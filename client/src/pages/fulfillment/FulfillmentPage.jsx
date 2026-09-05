@@ -23,9 +23,9 @@ export const FulfillmentPage = () => {
     <div className="space-y-8">
       {/* Screen 7 Header (from Wireframe) */}
       <div className="pb-5 border-b border-black/[0.08] dark:border-white/[0.08]">
-        <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">7. Fulfillment and Stock (List)</h1>
+        <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">Fulfillment & Stock</h1>
         <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-          Live stock per warehouse, plus every order that still needs fulfilling
+          Multi-warehouse allocation, inventory split routing, and backorder tracking
         </p>
       </div>
 

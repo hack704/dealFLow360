@@ -44,13 +44,19 @@ export const QuotationsListPage = () => {
     fetchQuotes();
   }, []);
 
+  const [statusFilter, setStatusFilter] = useState('all');
+
   const filteredQuotes = quotations.filter((q) => {
     const name = q.customer?.name || q.customerName || '';
     const num = q.quotationNumber || '';
-    return (
+    const matchesSearch =
       name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      num.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      num.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' ||
+      q.status === statusFilter ||
+      (statusFilter === 'confirmed' && q.status === 'accepted');
+    return matchesSearch && matchesStatus;
   });
 
   const columns = [
@@ -67,10 +73,10 @@ export const QuotationsListPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-black/[0.08] dark:border-white/[0.08]">
         <div>
           <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-            3. Quotations (List)
+            Quotations
           </h1>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Every quotation in the system, one row per quotation, click a row to open it
+            Enterprise quotation management, lifecycle tracking, and instant CPQ access
           </p>
         </div>
 
@@ -95,9 +101,9 @@ export const QuotationsListPage = () => {
         </div>
       </div>
 
-      {/* Search Input */}
-      <div className="max-w-md">
-        <div className="relative">
+      {/* Search & Right Space Filter Bar */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md w-full">
           <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#86868b] dark:text-apple-muted" />
           <input
             type="text"
@@ -106,6 +112,37 @@ export const QuotationsListPage = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full h-11 bg-white dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-xl pl-10 pr-4 text-[13px] text-[#1d1d1f] dark:text-white placeholder-[#86868b] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff] focus:ring-4 focus:ring-[#0071e3]/15 dark:focus:ring-[#2997ff]/20 transition-all shadow-sm"
           />
+        </div>
+
+        {/* Right Space: Quick Status Gesture Filter Pills */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar p-1 bg-black/[0.03] dark:bg-white/[0.04] rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
+          {[
+            { id: 'all', label: 'All', count: quotations.length },
+            { id: 'draft', label: 'Draft', count: quotations.filter(q => q.status === 'draft').length },
+            { id: 'pending_approval', label: 'Pending Approval', count: quotations.filter(q => q.status === 'pending_approval').length },
+            { id: 'approved', label: 'Approved', count: quotations.filter(q => q.status === 'approved').length },
+            { id: 'negotiation', label: 'Negotiation', count: quotations.filter(q => q.status === 'negotiation').length },
+            { id: 'confirmed', label: 'Confirmed', count: quotations.filter(q => q.status === 'confirmed' || q.status === 'accepted').length },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setStatusFilter(tab.id)}
+              className={`h-9 px-3.5 rounded-xl text-[12.5px] font-medium transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+                statusFilter === tab.id
+                  ? 'bg-white dark:bg-[#2c2c2e] text-[#1d1d1f] dark:text-white shadow-xs font-semibold'
+                  : 'text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-mono ${
+                statusFilter === tab.id
+                  ? 'bg-black/[0.08] dark:bg-white/[0.15] text-[#1d1d1f] dark:text-white'
+                  : 'bg-black/[0.04] dark:bg-white/[0.06] text-[#86868b]'
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 

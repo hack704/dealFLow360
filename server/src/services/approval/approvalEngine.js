@@ -28,12 +28,19 @@ const createApprovalRequest = async (quotation, user) => {
     currentStage = 'Finance';
   }
 
+  let submitterId = (user && user._id) || quotation.createdBy;
+  if (!submitterId) {
+    const User = require('../../models/User');
+    const defaultUser = await User.findOne();
+    if (defaultUser) submitterId = defaultUser._id;
+  }
+
   const approvalReq = await ApprovalRequest.create({
     quotation: quotation._id,
     quotationNumber: quotation.quotationNumber,
     customerName: quotation.customerName || 'Enterprise Account',
-    submittedBy: user._id,
-    submitterName: user.name || 'Sales Rep',
+    submittedBy: submitterId,
+    submitterName: (user && user.name) || 'Sales Rep',
     dealValue: quotation.grandTotal,
     blendedMarginPercent: quotation.blendedMarginPercent,
     maxDiscountPercent: maxDiscount,

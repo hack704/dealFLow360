@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Quotation = require('../models/Quotation');
 const { processQuotationCalculation } = require('../services/quotation/quotationEngine');
 const { generateQuotationNumber } = require('../utils/helpers');
@@ -76,13 +77,24 @@ const getQuotations = async (req, res, next) => {
   }
 };
 
-// @desc    Get single quotation by ID
+// @desc    Get single quotation by ID or quotationNumber
 // @route   GET /api/quotations/:id
 const getQuotationById = async (req, res, next) => {
   try {
-    const quotation = await Quotation.findById(req.params.id)
-      .populate('customer')
-      .populate('createdBy', 'name email role department');
+    const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+    let quotation = null;
+
+    if (isObjectId) {
+      quotation = await Quotation.findById(req.params.id)
+        .populate('customer')
+        .populate('createdBy', 'name email role department');
+    }
+
+    if (!quotation) {
+      quotation = await Quotation.findOne({ quotationNumber: req.params.id })
+        .populate('customer')
+        .populate('createdBy', 'name email role department');
+    }
 
     if (!quotation) {
       return sendError(res, 'Quotation not found', 404);
@@ -94,12 +106,71 @@ const getQuotationById = async (req, res, next) => {
   }
 };
 
+// @desc    Update quotation details and recalculate pricing
+// @route   PUT /api/quotations/:id
+const updateQuotation = async (req, res, next) => {
+  try {
+    const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+    let quotation = isObjectId
+      ? await Quotation.findById(req.params.id)
+      : await Quotation.findOne({ quotationNumber: req.params.id });
+
+    if (!quotation) {
+      return sendError(res, 'Quotation not found', 404);
+    }
+
+    const { customerId, title, items, notes, status, paymentTermsDays } = req.body;
+
+    if (items && items.length > 0) {
+      const targetCustomer = customerId || quotation.customer;
+      const calc = await processQuotationCalculation({
+        customerId: targetCustomer,
+        items: items.map((it) => ({
+          productId: it.productId || it.product?._id || it.product || it.id,
+          quantity: it.quantity || it.qty || 1,
+          discountPercent: it.discountPercent !== undefined ? it.discountPercent : (it.discount || 0)
+        }))
+      });
+
+      quotation.items = calc.items;
+      quotation.subtotal = calc.subtotal;
+      quotation.totalCost = calc.totalCost;
+      quotation.totalDiscountAmount = calc.totalDiscountAmount;
+      quotation.totalDiscountPercent = calc.totalDiscountPercent;
+      quotation.grandTotal = calc.grandTotal;
+      quotation.blendedMarginPercent = calc.blendedMarginPercent;
+      quotation.riskScore = calc.dealHealth.riskScore;
+      quotation.riskLevel = calc.dealHealth.riskLevel;
+      quotation.requiresApproval = calc.requiresApproval;
+      quotation.approvalReason = calc.approvalReason;
+    }
+
+    if (title) quotation.title = title;
+    if (notes !== undefined) quotation.notes = notes;
+    if (paymentTermsDays) quotation.paymentTermsDays = paymentTermsDays;
+    if (status) quotation.status = status;
+
+    await quotation.save();
+
+    const populated = await Quotation.findById(quotation._id)
+      .populate('customer')
+      .populate('createdBy', 'name email role department');
+
+    return sendSuccess(res, populated, 'Quotation updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Update quotation status (e.g. approve, reject, send, accept)
 // @route   PATCH /api/quotations/:id/status
 const updateQuotationStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-    const quotation = await Quotation.findById(req.params.id);
+    const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+    let quotation = isObjectId
+      ? await Quotation.findById(req.params.id)
+      : await Quotation.findOne({ quotationNumber: req.params.id });
 
     if (!quotation) {
       return sendError(res, 'Quotation not found', 404);
@@ -119,5 +190,6 @@ module.exports = {
   createQuotation,
   getQuotations,
   getQuotationById,
+  updateQuotation,
   updateQuotationStatus
 };

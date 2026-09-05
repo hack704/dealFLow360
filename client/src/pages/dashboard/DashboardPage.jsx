@@ -141,10 +141,10 @@ export const DashboardPage = () => {
               Central Module Hub
             </div>
             <h1 className="text-[26px] sm:text-[30px] lg:text-[34px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em] leading-tight">
-              2. Sales Dashboard / Home
+              Sales Dashboard
             </h1>
             <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1.5 max-w-2xl leading-relaxed">
-              Central hub, links out to every module below
+              Central hub for revenue operations, approval velocity, and deal margin health
             </p>
           </div>
 

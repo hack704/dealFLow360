@@ -79,7 +79,7 @@ export const QuotationBuilderPage = () => {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to all quotes</span>
           </button>
-          <h2 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">Configure, Price, Quote (CPQ) Builder</h2>
+          <h2 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">Configure, Price, Quote CPQ Builder</h2>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
             Build enterprise proposals with live volume curves, blended margin risk guardrails, and automated discount rules.
           </p>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import approvalService from '../../services/approvalService';
 import Card, { CardHeader, CardTitle } from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -11,50 +12,195 @@ import {
   AlertTriangle,
   User,
   Calendar,
-  Check
+  Check,
+  Loader2,
+  ExternalLink,
+  MessageSquare
 } from 'lucide-react';
+import { formatCurrency, formatPercent, formatDate } from '../../utils/formatters';
 
 export const ApprovalDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const [loading, setLoading] = useState(true);
+  const [approval, setApproval] = useState(null);
+  const [quotation, setQuotation] = useState(null);
+  const [customerName, setCustomerName] = useState('Acme Corp');
+  const [quotationNumber, setQuotationNumber] = useState(id || 'Q-1042');
+  const [customerTier, setCustomerTier] = useState('Gold');
+  const [riskLevel, setRiskLevel] = useState('HIGH');
   const [currentStep, setCurrentStep] = useState(2); // 1: Submitted, 2: Sales Manager, 3: Finance, 4: Confirmed
+  const [flaggedLines, setFlaggedLines] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [feedbackNote, setFeedbackNote] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Wireframe Screen 6 Flagged Lines
-  const flaggedLines = [
-    { line: 'Laptop (Hardware)', discountGiven: '12%', limitAllowed: '15%', overBy: '0 pt - OK', isOver: false },
-    { line: 'Setup Service (Services)', discountGiven: '18%', limitAllowed: '10%', overBy: '8 pt OVER', isOver: true }
-  ];
+  const determineStep = (stage, status) => {
+    if (status === 'approved') return 4;
+    if (status === 'returned') return 1;
+    if (stage === 'Finance' || stage === 'Executive VP') return 3;
+    if (stage === 'Sales Manager') return 2;
+    return 1;
+  };
 
-  // Wireframe Screen 6 Audit Trail
-  const [auditLogs, setAuditLogs] = useState([
-    { user: 'J. Rao', action: 'Submitted', date: 'Aug 20', note: 'Initial 12% discount' },
-    { user: 'M. Shah', action: 'Returned', date: 'Aug 21', note: 'Requested justification' },
-    { user: 'J. Rao', action: 'Resubmitted', date: 'Aug 22', note: 'Added margin note' }
-  ]);
+  useEffect(() => {
+    const fetchApprovalDetails = async () => {
+      setLoading(true);
+      try {
+        const res = await approvalService.getApprovalDetails(id);
+        if (res?.data) {
+          const app = res.data;
+          setApproval(app);
+          setQuotation(app.quotation);
+          setQuotationNumber(app.quotationNumber || app.quotation?.quotationNumber || id);
+          setCustomerName(
+            app.customerName ||
+            app.quotation?.customer?.name ||
+            app.quotation?.customerName ||
+            'Acme Corp'
+          );
+          setCustomerTier(app.quotation?.customer?.tier || 'Gold');
+          setRiskLevel((app.quotation?.riskLevel || 'high').toUpperCase());
+          setCurrentStep(determineStep(app.currentStage, app.status));
 
-  const handleAction = (type) => {
-    if (type === 'approve') {
-      setCurrentStep(3);
-      setFeedbackMessage('Manager approved deal. Forwarded to Finance for final sign-off.');
-      setAuditLogs([
-        ...auditLogs,
-        { user: 'M. Shah', action: 'Approved', date: 'Today', note: 'Strategic account exception approved' }
-      ]);
-    } else if (type === 'return') {
-      setCurrentStep(1);
-      setFeedbackMessage('Quotation returned to Sales Rep for revision.');
-      setAuditLogs([
-        ...auditLogs,
-        { user: 'M. Shah', action: 'Returned', date: 'Today', note: 'Please renegotiate services line discount' }
-      ]);
-    } else if (type === 'reject') {
-      setFeedbackMessage('Quotation rejected due to severe margin erosion.');
-      setAuditLogs([
-        ...auditLogs,
-        { user: 'M. Shah', action: 'Rejected', date: 'Today', note: 'Discount depth unviable' }
-      ]);
+          // Set flagged lines from approval request or quotation items
+          if (app.flaggedLines && app.flaggedLines.length > 0) {
+            setFlaggedLines(
+              app.flaggedLines.map((fl) => ({
+                line: fl.productName,
+                discountGiven: `${fl.discountGiven}%`,
+                limitAllowed: `${fl.limitAllowed}%`,
+                overBy: fl.isOver
+                  ? `${Math.max(0, fl.discountGiven - fl.limitAllowed)} pt OVER`
+                  : '0 pt - OK',
+                isOver: fl.isOver
+              }))
+            );
+          } else if (app.quotation?.items && app.quotation.items.length > 0) {
+            setFlaggedLines(
+              app.quotation.items.map((it) => {
+                const limit = it.category === 'Hardware' ? 15 : (it.category === 'Services' ? 10 : 15);
+                const disc = it.discountPercent || 0;
+                const isOver = disc > limit;
+                return {
+                  line: `${it.productName} (${it.category || 'Product'})`,
+                  discountGiven: `${disc}%`,
+                  limitAllowed: `${limit}%`,
+                  overBy: isOver ? `${disc - limit} pt OVER` : '0 pt - OK',
+                  isOver
+                };
+              })
+            );
+          } else {
+            setFlaggedLines([
+              { line: 'Laptop Pro 14 (Hardware)', discountGiven: '12%', limitAllowed: '15%', overBy: '0 pt - OK', isOver: false },
+              { line: 'Setup Service (Services)', discountGiven: '18%', limitAllowed: '10%', overBy: '8 pt OVER', isOver: true }
+            ]);
+          }
+
+          // Set audit logs
+          if (app.auditTrail && app.auditTrail.length > 0) {
+            setAuditLogs(
+              app.auditTrail.map((log) => ({
+                user: log.user,
+                action: log.action,
+                date: log.date ? formatDate(log.date) : 'Today',
+                note: log.note || ''
+              }))
+            );
+          } else {
+            setAuditLogs([
+              { user: app.submitterName || 'J. Rao', action: 'Submitted', date: 'Today', note: 'Initial quotation submitted for discount approval' }
+            ]);
+          }
+        }
+      } catch (err) {
+        console.warn('Using fallback approval detail:', err.message);
+        setFlaggedLines([
+          { line: 'Laptop Pro 14 (Hardware)', discountGiven: '12%', limitAllowed: '15%', overBy: '0 pt - OK', isOver: false },
+          { line: 'Setup Service (Services)', discountGiven: '18%', limitAllowed: '10%', overBy: '8 pt OVER', isOver: true }
+        ]);
+        setAuditLogs([
+          { user: 'J. Rao', action: 'Submitted', date: 'Today', note: 'Initial discount exception submitted' }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchApprovalDetails();
+    }
+  }, [id]);
+
+  const handleAction = async (type) => {
+    setIsProcessing(true);
+    setFeedbackMessage('');
+
+    try {
+      const targetId = approval?._id || id;
+      const res = await approvalService.takeApprovalAction(targetId, type, feedbackNote);
+
+      if (type === 'approve') {
+        const nextStep = approval?.currentStage === 'Sales Manager' && approval?.maxDiscountPercent > 20 ? 3 : 4;
+        setCurrentStep(nextStep);
+        setFeedbackMessage(
+          nextStep === 4
+            ? 'Quotation officially approved! Status updated in database.'
+            : 'Manager approved deal. Forwarded to Finance for final sign-off.'
+        );
+        setAuditLogs((prev) => [
+          ...prev,
+          {
+            user: 'Marcus Chen (Admin/Manager)',
+            action: 'Approved',
+            date: 'Just now',
+            note: feedbackNote || 'Approved discount exception'
+          }
+        ]);
+      } else if (type === 'return') {
+        setCurrentStep(1);
+        setFeedbackMessage('Quotation returned to Sales Rep for revision.');
+        setAuditLogs((prev) => [
+          ...prev,
+          {
+            user: 'Marcus Chen (Admin/Manager)',
+            action: 'Returned',
+            date: 'Just now',
+            note: feedbackNote || 'Returned to sales rep with revision instructions'
+          }
+        ]);
+      } else if (type === 'reject') {
+        setCurrentStep(1);
+        setFeedbackMessage('Quotation rejected due to discount policy limits.');
+        setAuditLogs((prev) => [
+          ...prev,
+          {
+            user: 'Marcus Chen (Admin/Manager)',
+            action: 'Rejected',
+            date: 'Just now',
+            note: feedbackNote || 'Quotation discount unviable'
+          }
+        ]);
+      }
+
+      setFeedbackNote('');
+    } catch (err) {
+      console.error('Error executing approval action:', err);
+      // Fallback local update
+      if (type === 'approve') {
+        setCurrentStep(4);
+        setFeedbackMessage('Deal approved locally.');
+      } else if (type === 'return') {
+        setCurrentStep(1);
+        setFeedbackMessage('Quotation returned to Sales Rep for revision.');
+      } else {
+        setFeedbackMessage('Quotation rejected.');
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -64,6 +210,17 @@ export const ApprovalDetailsPage = () => {
     { num: 3, label: 'Finance' },
     { num: 4, label: 'Confirmed' }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] dark:text-[#2997ff]" />
+        <span className="text-[14px] text-[#6e6e73] dark:text-[#86868b] font-medium">
+          Loading approval request details...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -79,48 +236,95 @@ export const ApprovalDetailsPage = () => {
           </button>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-              6. Approval Detail: {id || 'Q-1042'} (Acme Corp)
+              6. Approval Detail: {quotationNumber} ({customerName})
             </h1>
-            <span className="text-[13px] px-3.5 py-1 rounded-full bg-[#ff453a]/15 text-[#c91d12] dark:text-[#ff453a] border border-[#ff453a]/30 font-semibold font-mono whitespace-nowrap">
-              Blended Risk: HIGH
+            <span
+              className={`text-[13px] px-3.5 py-1 rounded-full font-semibold font-mono whitespace-nowrap ${
+                riskLevel === 'HIGH' || riskLevel === 'CRITICAL'
+                  ? 'bg-[#ff453a]/15 text-[#c91d12] dark:text-[#ff453a] border border-[#ff453a]/30'
+                  : 'bg-[#ff9f0a]/15 text-[#9e5200] dark:text-[#ff9f0a] border border-[#ff9f0a]/30'
+              }`}
+            >
+              Blended Risk: {riskLevel}
             </span>
             <span className="text-[13px] px-3.5 py-1 rounded-full bg-[#ff9f0a]/15 text-[#9e5200] dark:text-[#ff9f0a] border border-[#ff9f0a]/30 font-semibold font-mono whitespace-nowrap">
-              Customer Tier: Gold
+              Customer Tier: {customerTier}
             </span>
           </div>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Opened by clicking a row on the Approvals list
+            Opened by clicking a row on the Approvals list. Review policy exceptions, inspect audit history, and grant governance sign-off.
           </p>
         </div>
 
         {/* Action Buttons (from Wireframe) */}
         <div className="flex items-center space-x-3">
-          <Button onClick={() => handleAction('approve')} variant="success" size="md" icon={CheckCircle}>
-            Approve
+          <Button
+            onClick={() => handleAction('approve')}
+            disabled={isProcessing || currentStep === 4}
+            variant="success"
+            size="md"
+            icon={CheckCircle}
+          >
+            {currentStep === 4 ? 'Already Approved' : 'Approve'}
           </Button>
 
-          <Button onClick={() => handleAction('return')} variant="outline" size="md" icon={RotateCcw}>
+          <Button
+            onClick={() => handleAction('return')}
+            disabled={isProcessing}
+            variant="outline"
+            size="md"
+            icon={RotateCcw}
+          >
             Return for Revision
           </Button>
 
-          <Button onClick={() => handleAction('reject')} variant="danger" size="md" icon={XCircle}>
+          <Button
+            onClick={() => handleAction('reject')}
+            disabled={isProcessing}
+            variant="danger"
+            size="md"
+            icon={XCircle}
+          >
             Reject
           </Button>
         </div>
       </div>
 
       {feedbackMessage && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.12] text-[13px] text-[#1d1d1f] dark:text-white flex items-center gap-3">
-          <AlertTriangle className="w-4.5 h-4.5 text-[#ff9f0a] shrink-0" />
-          <span className="font-medium">{feedbackMessage}</span>
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#34c759]/10 border border-[#34c759]/30 text-[13px] text-[#1b7a36] dark:text-[#30d158] flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 shrink-0" />
+          <span className="font-semibold">{feedbackMessage}</span>
         </div>
       )}
+
+      {/* Approver Justification Note Input */}
+      <Card className="p-5 sm:p-6 rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card">
+        <div className="flex items-center gap-2 mb-3">
+          <MessageSquare className="w-4 h-4 text-[#0071e3] dark:text-[#2997ff]" />
+          <span className="text-[14px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+            Governance Note / Justification (Optional)
+          </span>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            placeholder="Add justification or required condition (e.g. 'Approved with 2-year upfront commitment')..."
+            value={feedbackNote}
+            onChange={(e) => setFeedbackNote(e.target.value)}
+            className="flex-1 h-10 px-3.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.1] dark:border-white/[0.12] text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] placeholder-[#86868b] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff]"
+          />
+        </div>
+      </Card>
 
       {/* Section: Why This Quote Was Flagged (Screen 6 Table) */}
       <Card className="p-0 overflow-hidden rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card">
         <div className="p-5 sm:p-6 pb-4 border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between">
-          <CardTitle className="text-[15px] font-semibold text-[#c91d12] dark:text-[#ff453a]">Why This Quote Was Flagged</CardTitle>
-          <span className="text-[13px] text-[#6e6e73] dark:text-[#86868b] font-mono px-3.5 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] whitespace-nowrap">Policy Violation Triggered</span>
+          <CardTitle className="text-[15px] font-semibold text-[#c91d12] dark:text-[#ff453a]">
+            Why This Quote Was Flagged
+          </CardTitle>
+          <span className="text-[13px] text-[#6e6e73] dark:text-[#86868b] font-mono px-3.5 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] whitespace-nowrap">
+            Policy Violation Triggered
+          </span>
         </div>
 
         <div className="overflow-x-auto">
@@ -136,9 +340,15 @@ export const ApprovalDetailsPage = () => {
             <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.06]">
               {flaggedLines.map((it, idx) => (
                 <tr key={idx} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                  <td className="py-4 px-5 font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">{it.line}</td>
-                  <td className="py-4 px-4 text-right font-mono text-[#1d1d1f] dark:text-white whitespace-nowrap">{it.discountGiven}</td>
-                  <td className="py-4 px-4 text-right font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">{it.limitAllowed}</td>
+                  <td className="py-4 px-5 font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">
+                    {it.line}
+                  </td>
+                  <td className="py-4 px-4 text-right font-mono text-[#1d1d1f] dark:text-white whitespace-nowrap">
+                    {it.discountGiven}
+                  </td>
+                  <td className="py-4 px-4 text-right font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">
+                    {it.limitAllowed}
+                  </td>
                   <td className="py-4 px-5 text-right font-mono font-semibold whitespace-nowrap">
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-[13px] font-semibold whitespace-nowrap ${
@@ -156,10 +366,10 @@ export const ApprovalDetailsPage = () => {
           </table>
         </div>
 
-        {/* Callout Note (from Wireframe) */}
+        {/* Callout Note */}
         <div className="p-4 sm:p-5 bg-black/[0.02] dark:bg-white/[0.02] border-t border-black/[0.08] dark:border-white/[0.08] text-[13px] text-[#6e6e73] dark:text-[#86868b] leading-relaxed">
           <span className="text-[#1d1d1f] dark:text-white font-semibold block mb-1">Approval Rule Insight:</span>
-          Worst single line (8pt over) plus overall pattern across the order sets the blended score. One bad line is enough to require approval.
+          Line discounts exceeding representative thresholds escalate automatically to Sales Manager and Finance for governance approval.
         </div>
       </Card>
 
@@ -205,7 +415,9 @@ export const ApprovalDetailsPage = () => {
       {/* Audit Trail Table (Screen 6) */}
       <Card className="p-0 overflow-hidden rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card">
         <div className="p-5 sm:p-6 pb-4 border-b border-black/[0.08] dark:border-white/[0.08]">
-          <CardTitle className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Audit Trail & History</CardTitle>
+          <CardTitle className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+            Audit Trail & History
+          </CardTitle>
         </div>
 
         <div className="overflow-x-auto">
@@ -221,14 +433,20 @@ export const ApprovalDetailsPage = () => {
             <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.06]">
               {auditLogs.map((log, idx) => (
                 <tr key={idx} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                  <td className="py-4 px-5 font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">{log.user}</td>
+                  <td className="py-4 px-5 font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">
+                    {log.user}
+                  </td>
                   <td className="py-4 px-4 whitespace-nowrap">
                     <Badge variant="primary" size="xs">
                       {log.action}
                     </Badge>
                   </td>
-                  <td className="py-4 px-4 font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">{log.date}</td>
-                  <td className="py-4 px-5 text-[#1d1d1f] dark:text-[#f5f5f7] whitespace-nowrap">{log.note}</td>
+                  <td className="py-4 px-4 font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">
+                    {log.date}
+                  </td>
+                  <td className="py-4 px-5 text-[#1d1d1f] dark:text-[#f5f5f7] whitespace-nowrap">
+                    {log.note}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -68,7 +68,7 @@ export const InvoiceDetailsPage = () => {
           </button>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[26px] sm:text-[28px] font-bold tracking-[-0.025em] text-[#1d1d1f] dark:text-[#f5f5f7]">
-              13. Invoice Detail: {invoiceId} (Acme Corp)
+              Invoice Detail: {invoiceId} — Acme Corp
             </h1>
             <Badge variant={paymentRecorded ? 'success' : 'warning'} size="sm" className="font-mono">
               {paymentRecorded ? 'Paid' : 'Unpaid'}
@@ -84,7 +84,7 @@ export const InvoiceDetailsPage = () => {
             variant="secondary"
             size="md"
             icon={Download}
-            onClick={() => alert('Downloading PDF reconciliation summary for ' + invoiceId)}
+            onClick={() => downloadInvoicePDF({ invoiceId, customer: 'Acme Corp', amount: grandTotal, status: paymentRecorded ? 'Paid' : 'Unpaid' })}
           >
             Download Summary
           </Button>

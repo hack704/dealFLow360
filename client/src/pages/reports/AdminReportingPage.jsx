@@ -7,13 +7,14 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
-  Filter,
+  ArrowUpRight,
   Users,
   ChevronDown
 } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
+import { downloadAdminReportPDF } from '../../utils/pdfExport';
 
 export const AdminReportingPage = () => {
   const [period, setPeriod] = useState('Last 30 Days');
@@ -23,11 +24,6 @@ export const AdminReportingPage = () => {
 
   const [exportNotice, setExportNotice] = useState(null);
 
-  const handleExport = (type) => {
-    setExportNotice(`Generating ${type} report for ${period}... Download ready.`);
-    setTimeout(() => setExportNotice(null), 4000);
-  };
-
   const repPerformance = [
     { rep: 'J. Rao', quotes: 42, avgDiscount: '9.4%', margin: '82.1%', escalations: 3, time: '3.8 hrs' },
     { rep: 'M. Chen', quotes: 38, avgDiscount: '13.8%', margin: '74.2%', escalations: 6, time: '7.2 hrs' },
@@ -35,13 +31,34 @@ export const AdminReportingPage = () => {
     { rep: 'E. Becker', quotes: 33, avgDiscount: '10.5%', margin: '79.0%', escalations: 4, time: '5.1 hrs' }
   ];
 
+  const handleExport = (type) => {
+    if (type === 'PDF') {
+      downloadAdminReportPDF({ period, salesTeam, approvalStatus, repPerformance });
+      setExportNotice(`Generated and downloaded ${type} report for ${period}.`);
+    } else {
+      // CSV/XLS generation
+      const headers = ['Sales Representative', 'Quotes Authored', 'Avg Discount', 'Gross Margin', 'Approval Escalations', 'Avg Turnaround'];
+      const rows = repPerformance.map(r => [r.rep, r.quotes, r.avgDiscount, r.margin, r.escalations, r.time]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `dealflow360_report_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setExportNotice(`Generated and downloaded ${type} report for ${period}.`);
+    }
+    setTimeout(() => setExportNotice(null), 4000);
+  };
+
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
+    <div className="space-y-8 max-w-[1400px] mx-auto pb-12">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.08] dark:border-white/[0.08] pb-5">
         <div>
           <h1 className="text-[26px] sm:text-[28px] font-bold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
-            Admin / Reporting Dashboard (Optional)
+            Admin & Reporting Dashboard
           </h1>
           <p className="text-[13px] text-[#86868b] mt-1">
             Sales trends, approval bottlenecks and platform usage
@@ -155,7 +172,10 @@ export const AdminReportingPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Quotes Created</h3>
-          <div className="text-[28px] font-bold font-mono text-[#1d1d1f] dark:text-white mt-1">148 this month</div>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-[24px] font-bold font-mono text-[#1d1d1f] dark:text-white">148</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal">this month</span>
+          </div>
           <p className="text-[13px] text-[#1b7e36] dark:text-[#30d158] mt-2 flex items-center gap-1">
             <span className="font-semibold">+18.4%</span>
             <span className="text-[#86868b]">vs previous 30-day baseline</span>
@@ -170,7 +190,10 @@ export const AdminReportingPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Avg Approval Time</h3>
-          <div className="text-[28px] font-bold font-mono text-[#1b7e36] dark:text-[#30d158] mt-1">6.4 hours</div>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-[24px] font-bold font-mono text-[#1b7e36] dark:text-[#30d158]">6.4</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal">hours avg SLA</span>
+          </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Target SLA: &lt; 8.0 hours. Median turnaround: 4.1 hours.
           </p>
@@ -184,7 +207,10 @@ export const AdminReportingPage = () => {
             </div>
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Top Upsold Product</h3>
-          <div className="text-[28px] font-bold font-mono text-[#79349e] dark:text-[#bf5af2] mt-1">Care Plan 2yr</div>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-[20px] font-bold font-mono text-[#79349e] dark:text-[#bf5af2]">Care Plan 2yr</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal">top attach</span>
+          </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Attached to 68.4% of eligible hardware quotations.
           </p>

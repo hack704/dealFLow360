@@ -21,10 +21,10 @@ export const SubscriptionsPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-black/[0.08] dark:border-white/[0.08]">
         <div>
           <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-            9. Subscriptions (List)
+            Subscriptions
           </h1>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Every recurring plan across every customer, regardless of which order it came from
+            Recurring billing lifecycle, active SaaS contracts, and proration schedules
           </p>
         </div>
 

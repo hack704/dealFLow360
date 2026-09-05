@@ -33,7 +33,7 @@ export const FulfillmentDetailPage = () => {
           </button>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-              8. Fulfillment Detail: {orderId} (Acme Corp)
+              Fulfillment Detail: {orderId} — Acme Corp
             </h1>
             <Badge variant="warning" size="sm">
               Split Pending
