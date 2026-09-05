@@ -29,6 +29,11 @@ export const quotationService = {
   updateStatus: async (id, status) => {
     const res = await api.patch(`/quotations/${id}/status`, { status });
     return res.data;
+  },
+
+  updateQuotationStatus: async (id, status) => {
+    const res = await api.patch(`/quotations/${id}/status`, { status });
+    return res.data;
   }
 };
 

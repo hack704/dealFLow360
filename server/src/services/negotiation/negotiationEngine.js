@@ -75,12 +75,34 @@ const submitCustomerCounterOffer = async ({
     await negotiation.save();
   }
 
-  // If counter discount triggers escalation, update quotation status
+  // If counter discount triggers escalation, update quotation status and re-enter approval flow
   if (requiresEscalation) {
     quote.status = QUOTATION_STATUSES.PENDING_APPROVAL;
     quote.requiresApproval = true;
     quote.approvalReason = `Customer counter-offer of ${discountVal}% exceeds standard rep threshold`;
     await quote.save();
+
+    try {
+      const ApprovalRequest = require('../../models/ApprovalRequest');
+      const { createApprovalRequest } = require('../approval/approvalEngine');
+      let appReq = await ApprovalRequest.findOne({ quotation: quote._id });
+      if (appReq) {
+        appReq.status = 'pending';
+        appReq.currentStage = 'Sales Manager';
+        appReq.maxDiscountPercent = discountVal;
+        appReq.dealValue = counterTotal;
+        appReq.auditTrail.push({
+          user: quote.customerName || 'Customer',
+          action: 'Counter-Offer Submitted',
+          note: `Customer requested ${discountVal}% discount. Deal re-entered approval queue.`
+        });
+        await appReq.save();
+      } else {
+        await createApprovalRequest(quote, { name: quote.customerName || 'Customer Portal' });
+      }
+    } catch (appErr) {
+      console.warn('[NEGOTIATION] Approval escalation sync note:', appErr.message);
+    }
   }
 
   return {
