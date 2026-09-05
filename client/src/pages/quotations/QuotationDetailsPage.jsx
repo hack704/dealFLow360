@@ -146,25 +146,16 @@ export const QuotationDetailsPage = () => {
 
     try {
       if (action === 'submit') {
-        if (hasOverLimit || quotation?.requiresApproval) {
-          // Submit to real approval workflow in backend
-          const targetId = quotation?._id || id;
-          const submitRes = await approvalService.submitForApproval(targetId);
-          setStatus('pending_approval');
-          setStatusMessage(
-            `Quotation ${quoteId} submitted for governance approval! Routing to Approval Screen...`
-          );
-          setTimeout(() => {
-            const approvalId = submitRes?.data?._id || targetId;
-            navigate(`/approvals/${approvalId}`);
-          }, 1200);
-        } else {
-          // Officially confirm quotation directly
-          const targetId = quotation?._id || id;
-          await quotationService.updateStatus(targetId, 'approved');
-          setStatus('approved');
-          setStatusMessage(`Quotation ${quoteId} officially approved and confirmed!`);
-        }
+        const targetId = quotation?._id || id;
+        const submitRes = await approvalService.submitForApproval(targetId);
+        setStatus('pending_approval');
+        setStatusMessage(
+          `Quotation ${quoteId} submitted for governance approval! Routing to Approval Screen...`
+        );
+        setTimeout(() => {
+          const approvalId = submitRes?.data?._id || targetId;
+          navigate(`/approvals/${approvalId}`);
+        }, 1200);
       } else {
         // Save draft with updated items in backend
         const targetId = quotation?._id || id;
@@ -286,11 +277,11 @@ export const QuotationDetailsPage = () => {
                 onClick={() => handleAction('submit')}
                 disabled={isSubmitting}
                 loading={isSubmitting}
-                variant={hasOverLimit ? 'primary' : 'success'}
+                variant="primary"
                 size="md"
                 icon={Send}
               >
-                {hasOverLimit ? 'Submit for Approval' : 'Confirm Quotation'}
+                Submit for Approval
               </Button>
             </>
           )}

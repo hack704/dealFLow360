@@ -61,7 +61,7 @@ export const ApprovalsQueuePage = () => {
       setLoading(true);
       try {
         const res = await approvalService.getApprovalsQueue();
-        if (res?.data && res.data.length > 0) {
+        if (res?.data && Array.isArray(res.data)) {
           const mapped = res.data.map((it) => ({
             id: it._id,
             quotationNumber: it.quotationNumber || it.quotation?.quotationNumber || it._id,
@@ -81,11 +81,11 @@ export const ApprovalsQueuePage = () => {
           }));
           setApprovalItems(mapped);
         } else {
-          setApprovalItems(defaultMockItems);
+          setApprovalItems([]);
         }
       } catch (err) {
-        console.warn('Failed to load approval queue, using fallback:', err.message);
-        setApprovalItems(defaultMockItems);
+        console.warn('Failed to load approval queue:', err.message);
+        setApprovalItems([]);
       } finally {
         setLoading(false);
       }

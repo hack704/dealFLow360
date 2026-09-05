@@ -60,6 +60,32 @@ const createQuotation = async (req, res, next) => {
       } catch (err) {
         console.warn('[QUOTATION] Auto approval request creation notice:', err.message);
       }
+    } else if (initialStatus === 'approved') {
+      try {
+        const ApprovalRequest = require('../models/ApprovalRequest');
+        await ApprovalRequest.create({
+          quotation: quotation._id,
+          quotationNumber: quotation.quotationNumber,
+          customerName: quotation.customerName || 'Enterprise Account',
+          submittedBy: quotation.createdBy,
+          submitterName: (req.user && req.user.name) || 'Sales Rep',
+          dealValue: quotation.grandTotal,
+          blendedMarginPercent: quotation.blendedMarginPercent,
+          maxDiscountPercent: quotation.totalDiscountPercent || 0,
+          riskScore: quotation.riskScore || 15,
+          currentStage: 'Approved',
+          status: 'approved',
+          auditTrail: [
+            {
+              user: (req.user && req.user.name) || 'Manager / Admin',
+              action: 'Approved',
+              note: 'Officially confirmed and verified in governance queue'
+            }
+          ]
+        });
+      } catch (err) {
+        console.warn('[QUOTATION] Auto approval request creation notice:', err.message);
+      }
     }
 
     const populated = await Quotation.findById(quotation._id).populate('customer');
@@ -193,10 +219,29 @@ const updateQuotationStatus = async (req, res, next) => {
 
     if (status === 'approved' || status === 'accepted' || status === 'confirmed') {
       try {
+        const ApprovalRequest = require('../models/ApprovalRequest');
+        let appReq = await ApprovalRequest.findOne({ quotation: quotation._id });
+        if (appReq) {
+          appReq.status = 'approved';
+          appReq.currentStage = 'Approved';
+          appReq.auditTrail.push({
+            user: (req.user && req.user.name) || 'Approver',
+            action: 'Approved',
+            note: 'Quotation approved and confirmed'
+          });
+          await appReq.save();
+        }
         const { generateBillingFromQuotation } = require('../services/billing/billingEngine');
         await generateBillingFromQuotation(quotation._id);
       } catch (err) {
         console.warn('[QUOTATION] Auto billing generation notice:', err.message);
+      }
+    } else if (status === 'pending_approval') {
+      try {
+        const { createApprovalRequest } = require('../services/approval/approvalEngine');
+        await createApprovalRequest(quotation, req.user || { _id: quotation.createdBy, name: 'Sales Rep' });
+      } catch (err) {
+        console.warn('[QUOTATION] Auto approval request notice:', err.message);
       }
     }
 

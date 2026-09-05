@@ -55,13 +55,13 @@ export const QuotationBuilderPage = () => {
 
       const res = await quotationService.createQuotation(payload);
       if (res && res.data) {
-        setSuccessMessage(`Quotation ${res.data.quotationNumber} successfully generated!`);
+        setSuccessMessage(`Quotation ${res.data.quotationNumber} successfully submitted for approval!`);
         setTimeout(() => {
           resetBuilder();
-          if (status === 'pending_approval') {
-            navigate(`/approvals/${res.data._id}`);
-          } else {
+          if (status === 'draft') {
             navigate(`/quotations/${res.data._id}`);
+          } else {
+            navigate(`/approvals/${res.data._id}`);
           }
         }, 1200);
       }
@@ -103,14 +103,14 @@ export const QuotationBuilderPage = () => {
           </Button>
 
           <Button
-            onClick={() => handleSaveQuote(calculation?.requiresApproval ? 'pending_approval' : 'approved')}
+            onClick={() => handleSaveQuote('pending_approval')}
             disabled={saving || items.length === 0}
             loading={saving}
             variant="primary"
             size="md"
             icon={Send}
           >
-            {calculation?.requiresApproval ? 'Submit for Approval' : 'Generate Official Quote'}
+            Submit for Approval
           </Button>
         </div>
       </div>

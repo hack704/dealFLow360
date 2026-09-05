@@ -142,9 +142,13 @@ export const ApprovalDetailsPage = () => {
     try {
       const targetId = approval?._id || id;
       const res = await approvalService.takeApprovalAction(targetId, type, feedbackNote);
+      if (res?.data) {
+        setApproval(res.data);
+      }
 
       if (type === 'approve') {
-        const nextStep = approval?.currentStage === 'Sales Manager' && approval?.maxDiscountPercent > 20 ? 3 : 4;
+        const isFinanceEscalation = approval?.currentStage === 'Sales Manager' && approval?.maxDiscountPercent > 20;
+        const nextStep = isFinanceEscalation ? 3 : 4;
         setCurrentStep(nextStep);
         setFeedbackMessage(
           nextStep === 4
