@@ -116,6 +116,7 @@ export const QuotationProvider = ({ children }) => {
         customer,
         setCustomer,
         items,
+        setItems,
         addItem,
         removeItem,
         updateItemQuantity,

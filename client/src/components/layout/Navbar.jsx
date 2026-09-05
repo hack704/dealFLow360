@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useAutoMode } from '../../context/AutoModeContext';
 import {
   Layers,
   LogOut,
@@ -25,6 +26,7 @@ import {
 export const Navbar = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
+  const { isAutoMode, toggleAutoMode } = useAutoMode();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -107,6 +109,25 @@ export const Navbar = () => {
 
         {/* Right Actions: Theme Toggle, View Switcher & User Profile */}
         <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+          {/* Auto Mode Interactive Toggle */}
+          <button
+            type="button"
+            onClick={toggleAutoMode}
+            aria-label={isAutoMode ? 'Auto Mode is ON' : 'Turn Auto Mode ON'}
+            title={isAutoMode ? 'Auto Mode is ON — Click to turn OFF' : 'Turn Auto Mode ON'}
+            className={`h-8.5 sm:h-9 px-2.5 sm:px-3 rounded-xl text-[12px] font-semibold flex items-center gap-1.5 transition-all shadow-sm border ${
+              isAutoMode
+                ? 'bg-[#34c759]/15 text-[#1b7e36] dark:text-[#30d158] border-[#34c759]/30 hover:bg-[#34c759]/20'
+                : 'bg-black/[0.03] dark:bg-white/[0.06] text-[#6e6e73] dark:text-[#86868b] border-black/[0.06] dark:border-white/[0.08] hover:text-[#1d1d1f] dark:hover:text-white'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${isAutoMode ? 'bg-[#34c759] animate-pulse' : 'bg-[#86868b]'}`} />
+            <span className="hidden sm:inline">Auto Mode</span>
+            <span className={`font-mono text-[11px] ${isAutoMode ? 'text-[#1b7e36] dark:text-[#30d158]' : ''}`}>
+              {isAutoMode ? 'ON' : 'OFF'}
+            </span>
+          </button>
+
           {/* Apple Transparent Icon Gesture: Light / Dark Mode Toggle */}
           <button
             type="button"

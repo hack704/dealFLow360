@@ -2,20 +2,25 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuotation } from '../../context/QuotationContext';
 import quotationService from '../../services/quotationService';
+import customerService from '../../services/customerService';
+import productService from '../../services/productService';
 import QuotationForm from '../../components/quotation/QuotationForm';
 import QuotationItemsTable from '../../components/quotation/QuotationItemsTable';
 import DiscountSummary from '../../components/quotation/DiscountSummary';
 import BlendedRiskCard from '../../components/quotation/BlendedRiskCard';
 import UpsellPanel from '../../components/quotation/UpsellPanel';
 import Button from '../../components/common/Button';
-import { Send, Save, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Send, Save, ArrowLeft, CheckCircle, Sparkles } from 'lucide-react';
 
 export const QuotationBuilderPage = () => {
   const navigate = useNavigate();
   const {
     customer,
+    setCustomer,
     items,
+    setItems,
     title,
+    setTitle,
     notes,
     paymentTermsDays,
     calculation,
@@ -25,6 +30,92 @@ export const QuotationBuilderPage = () => {
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  const handleAutoFillDemo = async () => {
+    try {
+      const [custRes, prodRes] = await Promise.all([
+        customerService.getCustomers(),
+        productService.getProducts()
+      ]);
+      const custs = custRes?.data || [];
+      const prods = prodRes?.data || [];
+
+      const targetCust = custs.find((c) => c.name?.includes('Acme')) || custs[0] || {
+        _id: 'cust-demo-1',
+        name: 'Acme Global Enterprises',
+        tier: 'Gold'
+      };
+      setCustomer(targetCust);
+      if (setTitle) {
+        setTitle(`Enterprise Agreement - ${targetCust.name}`);
+      }
+
+      const hardware = prods.find((p) => p.category === 'Hardware') || {
+        _id: 'p-demo-hw',
+        name: 'Laptop Pro 14',
+        category: 'Hardware',
+        basePrice: 1200,
+        unitCost: 750,
+        sku: 'HW-LAP-14'
+      };
+      const service = prods.find((p) => p.category === 'Services') || {
+        _id: 'p-demo-srv',
+        name: 'Onsite Setup Service',
+        category: 'Services',
+        basePrice: 450,
+        unitCost: 150,
+        sku: 'SRV-SETUP'
+      };
+      const sub = prods.find((p) => p.category === 'Subscription') || {
+        _id: 'p-demo-sub',
+        name: 'Care Plan 2 years',
+        category: 'Subscription',
+        basePrice: 180,
+        unitCost: 40,
+        sku: 'SUB-CARE-2Y'
+      };
+
+      setItems([
+        {
+          product: hardware,
+          productId: hardware._id,
+          productName: hardware.name,
+          sku: hardware.sku,
+          category: hardware.category,
+          listPrice: hardware.basePrice,
+          unitCost: hardware.unitCost,
+          quantity: 20,
+          discountPercent: 18 // Exceeds Hardware 15% threshold!
+        },
+        {
+          product: service,
+          productId: service._id,
+          productName: service.name,
+          sku: service.sku,
+          category: service.category,
+          listPrice: service.basePrice,
+          unitCost: service.unitCost,
+          quantity: 2,
+          discountPercent: 12 // Exceeds Services 10% threshold!
+        },
+        {
+          product: sub,
+          productId: sub._id,
+          productName: sub.name,
+          sku: sub.sku,
+          category: sub.category,
+          listPrice: sub.basePrice,
+          unitCost: sub.unitCost,
+          quantity: 20,
+          discountPercent: 5
+        }
+      ]);
+      setSuccessMessage('Loaded Hackathon Demo Enterprise Deal: 3 lines, blended discount exceptions & recurring lines!');
+      setTimeout(() => setSuccessMessage(''), 4000);
+    } catch (err) {
+      console.error('Auto fill demo error:', err);
+    }
+  };
 
   const handleSaveQuote = async (status = 'draft') => {
     if (!customer) {
@@ -91,7 +182,16 @@ export const QuotationBuilderPage = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Button
+            onClick={handleAutoFillDemo}
+            variant="secondary"
+            size="md"
+            icon={Sparkles}
+          >
+            Auto-Fill Demo Deal
+          </Button>
+
           <Button
             onClick={() => handleSaveQuote('draft')}
             disabled={saving || items.length === 0}

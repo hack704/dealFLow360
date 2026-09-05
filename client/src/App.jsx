@@ -3,6 +3,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { QuotationProvider } from './context/QuotationContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AutoModeProvider } from './context/AutoModeContext';
+import AutoPilotController from './components/common/AutoPilotController';
 import AppRoutes from './routes/AppRoutes';
 
 function App() {
@@ -11,7 +13,10 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <QuotationProvider>
-            <AppRoutes />
+            <AutoModeProvider>
+              <AppRoutes />
+              <AutoPilotController />
+            </AutoModeProvider>
           </QuotationProvider>
         </AuthProvider>
       </ThemeProvider>
