@@ -7,45 +7,66 @@ const Quotation = require('../../models/Quotation');
  * @returns {Object} Suggested split routing across depots with cost and timeline estimates
  */
 const calculateSplitAllocation = async (quotationId) => {
-  let quote = await Quotation.findById(quotationId).populate('items.product');
+  const mongoose = require('mongoose');
+  let quote = null;
+  if (mongoose.Types.ObjectId.isValid(quotationId)) {
+    quote = await Quotation.findById(quotationId).populate('items.product');
+  }
   if (!quote) {
     quote = await Quotation.findOne({ quotationNumber: quotationId }).populate('items.product');
   }
 
   const items = quote ? quote.items : [];
-
-  // Warehouse breakdown default fallback model
-  const warehouseBreakdown = [
-    {
-      warehouse: 'Main Warehouse',
-      location: 'Dallas, TX',
-      qtyFulfilled: 18,
-      estShipments: 1,
-      shippingCost: 42,
-      transitDays: 2,
-      status: 'Ready to Dispatch'
-    },
-    {
-      warehouse: 'East Depot',
-      location: 'Allentown, PA',
-      qtyFulfilled: 6,
-      estShipments: 1,
-      shippingCost: 29,
-      transitDays: 1,
-      status: 'Stock Allocated'
-    }
-  ];
-
   const totalUnits = items.reduce((acc, it) => acc + (it.quantity || 0), 0) || 24;
-  const backorderUnits = 0;
+  
+  let warehouseBreakdown = [];
+  if (totalUnits > 20) {
+    const mainQty = Math.ceil(totalUnits * 0.75);
+    const eastQty = totalUnits - mainQty;
+    warehouseBreakdown = [
+      {
+        warehouse: 'Main Warehouse',
+        location: 'Dallas, TX',
+        qtyFulfilled: `${mainQty} units`,
+        estShipments: 1,
+        cost: Math.round(mainQty * 2.3 + 10),
+        transitDays: 2,
+        status: 'Ready to Dispatch'
+      },
+      {
+        warehouse: 'East Depot',
+        location: 'Allentown, PA',
+        qtyFulfilled: `${eastQty} units`,
+        estShipments: 1,
+        cost: Math.round(eastQty * 3.2 + 10),
+        transitDays: 1,
+        status: 'Stock Allocated'
+      }
+    ];
+  } else {
+    warehouseBreakdown = [
+      {
+        warehouse: 'Main Warehouse',
+        location: 'Dallas, TX',
+        qtyFulfilled: `${totalUnits} units`,
+        estShipments: 1,
+        cost: Math.round(totalUnits * 2.5 + 15),
+        transitDays: 2,
+        status: 'Ready to Dispatch'
+      }
+    ];
+  }
+
+  const totalShipping = warehouseBreakdown.reduce((acc, w) => acc + w.cost, 0);
 
   return {
     orderId: quote ? quote.quotationNumber : quotationId,
-    customerName: quote ? quote.customerName : 'Acme Corp',
+    quotationId: quote ? quote._id : quotationId,
+    customerName: quote ? (quote.customerName || (quote.customer && quote.customer.name)) : 'Acme Corp',
     totalUnits,
-    backorderUnits,
+    backorderUnits: 0,
     suggestedSplits: warehouseBreakdown,
-    totalEstimatedShippingCost: 71,
+    totalEstimatedShippingCost: totalShipping,
     requiresConfirmation: true
   };
 };

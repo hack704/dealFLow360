@@ -29,6 +29,11 @@ export const billingService = {
   calculateProrationPreview: async (data) => {
     const res = await api.post('/billing/proration-preview', data);
     return res.data;
+  },
+
+  generateBilling: async (quotationId) => {
+    const res = await api.post(`/billing/generate/${quotationId}`);
+    return res.data;
   }
 };
 

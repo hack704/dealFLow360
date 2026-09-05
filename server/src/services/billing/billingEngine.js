@@ -9,38 +9,62 @@ const { roundTwoDecimals } = require('../../utils/helpers');
  * @returns {Object} { invoice, subscription }
  */
 const generateBillingFromQuotation = async (quotationId) => {
-  const quote = await Quotation.findById(quotationId).populate('customer');
+  const mongoose = require('mongoose');
+  let quote = null;
+  if (mongoose.Types.ObjectId.isValid(quotationId)) {
+    quote = await Quotation.findById(quotationId).populate('customer');
+  }
+  if (!quote) {
+    quote = await Quotation.findOne({ quotationNumber: quotationId }).populate('customer');
+  }
   if (!quote) throw new Error('Quotation not found');
+
+  // Check if invoice or subscription already exists
+  let existingInvoice = await Invoice.findOne({ quotation: quote._id }).populate('customer quotation');
+  let existingSubscription = await Subscription.findOne({ quotation: quote._id }).populate('customer');
+  if (existingInvoice || existingSubscription) {
+    return {
+      invoice: existingInvoice,
+      subscription: existingSubscription
+    };
+  }
 
   const oneTimeItems = [];
   const recurringItems = [];
 
-  for (const it of quote.items) {
-    if (it.category === 'Software' || it.category === 'Support') {
+  for (const it of (quote.items || [])) {
+    if (it.category === 'Software' || it.category === 'Support' || (it.productName && it.productName.toLowerCase().includes('plan'))) {
       recurringItems.push(it);
     } else {
       oneTimeItems.push(it);
     }
   }
 
+  // Fallback: if no one-time and no recurring but quote has grandTotal, create an invoice
+  if (oneTimeItems.length === 0 && recurringItems.length === 0 && (quote.items || []).length > 0) {
+    oneTimeItems.push(...quote.items);
+  }
+
+  const customerId = quote.customer ? (quote.customer._id || quote.customer) : null;
+
   let createdInvoice = null;
   if (oneTimeItems.length > 0) {
-    const subtotal = oneTimeItems.reduce((acc, it) => acc + it.lineTotal, 0);
+    const subtotal = oneTimeItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.netUnitPrice) || 0), 0);
     const tax = roundTwoDecimals(subtotal * 0.08); // 8% tax
     const invoiceNum = `INV-${Math.floor(1000 + Math.random() * 9000)}`;
 
     createdInvoice = await Invoice.create({
       invoiceNumber: invoiceNum,
       quotation: quote._id,
-      customer: quote.customer._id || quote.customer,
-      customerName: quote.customerName,
+      customer: customerId,
+      customerName: quote.customerName || (quote.customer && quote.customer.name) || 'Customer',
       type: 'One-Time Order',
       items: oneTimeItems.map((it) => ({
-        item: it.productName,
-        quantity: it.quantity,
-        unitPrice: it.listPrice,
-        discountPercent: it.discountPercent,
-        total: it.lineTotal
+        item: it.productName || 'Line Item',
+        quantity: it.quantity || 1,
+        unitPrice: it.listPrice || 0,
+        discountPercent: it.discountPercent || 0,
+        total: it.lineTotal || 0
       })),
       subtotal,
       taxAmount: tax,
@@ -52,15 +76,15 @@ const generateBillingFromQuotation = async (quotationId) => {
 
   let createdSubscription = null;
   if (recurringItems.length > 0) {
-    const recurringAmount = recurringItems.reduce((acc, it) => acc + it.lineTotal, 0);
+    const recurringAmount = recurringItems.reduce((acc, it) => acc + (it.lineTotal || (it.quantity * it.netUnitPrice) || 0), 0);
     const subNum = `SUB-${Math.floor(1000 + Math.random() * 9000)}`;
 
     createdSubscription = await Subscription.create({
       subscriptionNumber: subNum,
       quotation: quote._id,
-      customer: quote.customer._id || quote.customer,
-      customerName: quote.customerName,
-      planName: recurringItems[0].productName,
+      customer: customerId,
+      customerName: quote.customerName || (quote.customer && quote.customer.name) || 'Customer',
+      planName: recurringItems[0].productName || 'Subscription Plan',
       billingCycle: 'Monthly',
       amount: recurringAmount,
       status: 'Active',

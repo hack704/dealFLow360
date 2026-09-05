@@ -7,6 +7,7 @@ const {
 } = require('../controllers/negotiationController');
 const { protect } = require('../middleware/authMiddleware');
 
+router.get('/', getNegotiationByQuote);
 router.get('/:quoteId', getNegotiationByQuote);
 router.post('/:quoteId/counter', submitCounterOffer);
 router.post('/:id/comments', protect, addComment);

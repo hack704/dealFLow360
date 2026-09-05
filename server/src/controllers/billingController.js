@@ -116,11 +116,23 @@ const calculateProrationPreview = (req, res, next) => {
   }
 };
 
+// @desc    Generate billing (invoice and subscription) from quotation
+// @route   POST /api/billing/generate/:id
+const generateBilling = async (req, res, next) => {
+  try {
+    const result = await generateBillingFromQuotation(req.params.id);
+    return sendSuccess(res, result, 'Billing documents generated from quotation', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getInvoices,
   getInvoiceById,
   recordPayment,
   getSubscriptions,
   getSubscriptionById,
-  calculateProrationPreview
+  calculateProrationPreview,
+  generateBilling
 };

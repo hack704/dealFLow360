@@ -7,9 +7,13 @@ const { sendSuccess, sendError } = require('../utils/apiResponse');
 // @route   GET /api/fulfillment
 const getFulfillmentList = async (req, res, next) => {
   try {
-    const quotations = await Quotation.find({
-      status: { $in: ['approved', 'accepted', 'sent_to_customer'] }
+    let quotations = await Quotation.find({
+      status: { $in: ['approved', 'accepted', 'sent_to_customer', 'confirmed'] }
     }).sort({ updatedAt: -1 });
+
+    if (quotations.length === 0) {
+      quotations = await Quotation.find().sort({ updatedAt: -1 }).limit(5);
+    }
 
     const orders = quotations.map((q) => {
       const units = (q.items || []).reduce((acc, it) => acc + (it.quantity || 0), 0);

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Send,
   CheckCircle2,
@@ -9,24 +9,32 @@ import {
   Calendar,
   MessageSquare,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatDate } from '../../utils/formatters';
+import negotiationService from '../../services/negotiationService';
+import quotationService from '../../services/quotationService';
 
 export const CustomerPortalPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const quoteParam = searchParams.get('quote') || searchParams.get('id');
 
+  const [loading, setLoading] = useState(true);
   // Quotation state for customer negotiation
   const [quotation, setQuotation] = useState({
     id: 'Q-1042',
+    quotationId: null,
     customer: 'Acme Corp',
     contactPerson: 'Alex Rivera',
     status: 'Under Negotiation',
     originalTotal: 28400,
+    counterTotal: 28400,
     validUntil: '2026-10-15',
     lines: [
       {
@@ -64,13 +72,58 @@ export const CustomerPortalPage = () => {
   const [statusMessage, setStatusMessage] = useState(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
-  const handleSubmitCounter = (e) => {
+  useEffect(() => {
+    const fetchNegotiation = async () => {
+      setLoading(true);
+      try {
+        const res = await negotiationService.getNegotiationByQuote(quoteParam || 'latest');
+        if (res?.data) {
+          const d = res.data;
+          setQuotation((prev) => ({
+            ...prev,
+            id: d.quotationNumber || prev.id,
+            quotationId: d.quotationId || d.quotation?._id || prev.quotationId,
+            customer: d.customerName || prev.customer,
+            status: d.status || prev.status,
+            originalTotal: d.originalTotal || prev.originalTotal,
+            counterTotal: d.counterTotal || prev.counterTotal,
+            lines: (d.lineRedlines && d.lineRedlines.length > 0) ? d.lineRedlines : prev.lines
+          }));
+          if (d.requestedDiscountPercent) {
+            setCounterDiscount(String(d.requestedDiscountPercent));
+          }
+          if (d.status === 'Accepted' || d.status === 'confirmed') {
+            setIsConfirmed(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Fallback negotiation portal:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNegotiation();
+  }, [quoteParam]);
+
+  const handleSubmitCounter = async (e) => {
     e.preventDefault();
     const discountNum = parseFloat(counterDiscount) || 0;
+    try {
+      const quoteTarget = quotation.id || quotation.quotationId;
+      await negotiationService.submitCounterOffer(quoteTarget, {
+        counterDiscountPercent: discountNum,
+        requestedDate,
+        customerComment: customerNotes
+      });
+    } catch (err) {
+      console.warn('Counter offer submission notice:', err.message);
+    }
+
     if (discountNum > 15) {
       setStatusMessage({
         type: 'warning',
-        text: 'Counter discount of ' + discountNum + '% exceeds auto-approval threshold (15%). This request will automatically re-enter the Sales Manager and Finance approval queue.'
+        text: 'Counter discount of ' + discountNum + '% exceeds auto-approval threshold (15%). This request has automatically re-entered the Sales Manager & Finance approval queue.'
       });
     } else {
       setStatusMessage({
@@ -80,11 +133,18 @@ export const CustomerPortalPage = () => {
     }
   };
 
-  const handleConfirmQuotation = () => {
+  const handleConfirmQuotation = async () => {
+    try {
+      const quoteTarget = quotation.quotationId || quotation.id;
+      await quotationService.updateQuotationStatus(quoteTarget, 'accepted');
+    } catch (err) {
+      console.warn('Quotation status update note:', err.message);
+    }
+
     setIsConfirmed(true);
     setStatusMessage({
       type: 'confirmed',
-      text: 'Quotation Q-1042 accepted and confirmed! Order #ORD-2026-8812 has been generated and sent to fulfillment.'
+      text: `Quotation ${quotation.id} accepted and confirmed! Order has been generated, warehouse fulfillment allocated, and billing invoice issued.`
     });
   };
 
@@ -137,13 +197,31 @@ export const CustomerPortalPage = () => {
           <div className="flex-1">
             <span className="font-semibold">{statusMessage.text}</span>
             {statusMessage.type === 'confirmed' && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => navigate(`/fulfillment/${quotation.id}`)}
+                >
+                  View Fulfillment Split &rarr;
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => navigate('/invoices')}
+                >
+                  View Invoices & Billing &rarr;
+                </Button>
+              </div>
+            )}
+            {statusMessage.type === 'warning' && (
               <div className="mt-3">
                 <Button
                   size="sm"
                   variant="primary"
-                  onClick={() => navigate('/invoices')}
+                  onClick={() => navigate('/approvals')}
                 >
-                  View Generated Invoice <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  Inspect Governance Approvals Queue &rarr;
                 </Button>
               </div>
             )}

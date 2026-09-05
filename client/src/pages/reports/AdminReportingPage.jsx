@@ -15,6 +15,7 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { downloadAdminReportPDF } from '../../utils/pdfExport';
+import quotationService from '../../services/quotationService';
 
 export const AdminReportingPage = () => {
   const [period, setPeriod] = useState('Last 30 Days');
@@ -23,13 +24,31 @@ export const AdminReportingPage = () => {
   const [productFilter, setProductFilter] = useState('All Products');
 
   const [exportNotice, setExportNotice] = useState(null);
+  const [quotesCount, setQuotesCount] = useState(148);
+  const [avgDiscountRate, setAvgDiscountRate] = useState('10.4%');
 
-  const repPerformance = [
+  const [repPerformance, setRepPerformance] = useState([
     { rep: 'J. Rao', quotes: 42, avgDiscount: '9.4%', margin: '82.1%', escalations: 3, time: '3.8 hrs' },
     { rep: 'M. Chen', quotes: 38, avgDiscount: '13.8%', margin: '74.2%', escalations: 6, time: '7.2 hrs' },
     { rep: 'S. Patel', quotes: 35, avgDiscount: '8.1%', margin: '85.4%', escalations: 2, time: '2.9 hrs' },
     { rep: 'E. Becker', quotes: 33, avgDiscount: '10.5%', margin: '79.0%', escalations: 4, time: '5.1 hrs' }
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchReportingData = async () => {
+      try {
+        const res = await quotationService.getQuotations();
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setQuotesCount(res.data.length);
+          const totalDisc = res.data.reduce((acc, q) => acc + (q.totalDiscountPercent || 0), 0);
+          setAvgDiscountRate(`${(totalDisc / res.data.length).toFixed(1)}%`);
+        }
+      } catch (err) {
+        console.warn('Reporting live data notice:', err.message);
+      }
+    };
+    fetchReportingData();
+  }, []);
 
   const handleExport = (type) => {
     if (type === 'PDF') {
@@ -173,8 +192,8 @@ export const AdminReportingPage = () => {
           </div>
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Quotes Created</h3>
           <div className="flex items-baseline gap-1.5 mt-1">
-            <span className="text-[24px] font-bold font-mono text-[#1d1d1f] dark:text-white">148</span>
-            <span className="text-[13.5px] text-[#86868b] font-normal">this month</span>
+            <span className="text-[24px] font-bold font-mono text-[#1d1d1f] dark:text-white">{quotesCount}</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal">active in pipeline</span>
           </div>
           <p className="text-[13px] text-[#1b7e36] dark:text-[#30d158] mt-2 flex items-center gap-1">
             <span className="font-semibold">+18.4%</span>

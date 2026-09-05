@@ -8,38 +8,37 @@ const getDealHealthList = async (req, res, next) => {
   try {
     const deals = await DealHealth.find().sort({ riskScore: -1 });
 
-    // If database has no alerts yet, generate dynamic alerts from active quotations
-    if (deals.length === 0) {
-      const quotations = await Quotation.find().populate('customer createdBy');
-      const dynamicDeals = quotations.map((q) => {
-        let issue = 'Active pipeline review';
-        let issueType = 'stalled';
-        if (q.blendedMarginPercent < 20) {
-          issue = `Low blended margin (${q.blendedMarginPercent}%)`;
-          issueType = 'discount';
-        } else if (q.totalDiscountPercent > 15) {
-          issue = `Discount ${q.totalDiscountPercent}% vs avg 8%`;
-          issueType = 'discount';
-        }
+    const quotations = await Quotation.find().sort({ updatedAt: -1 }).populate('customer createdBy');
+    const dynamicDeals = quotations.map((q) => {
+      let issue = 'Active pipeline review';
+      let issueType = 'stalled';
+      if (q.blendedMarginPercent < 20) {
+        issue = `Low blended margin (${q.blendedMarginPercent}%)`;
+        issueType = 'discount';
+      } else if (q.totalDiscountPercent > 15) {
+        issue = `Discount ${q.totalDiscountPercent}% vs max 15%`;
+        issueType = 'discount';
+      } else if (q.status === 'pending_approval') {
+        issue = 'Pending Governance Sign-off';
+        issueType = 'stalled';
+      }
 
-        return {
-          id: q.quotationNumber,
-          deal: q.customerName,
-          issue,
-          issueType,
-          flagged: 'Today',
-          action: q.requiresApproval ? 'Awaiting Approval' : 'Review scheduled',
-          actionStatus: 'pending',
-          rep: q.createdBy ? q.createdBy.name : 'J. Rao',
-          value: `$${q.grandTotal.toLocaleString()}`,
-          riskScore: q.riskScore || 25
-        };
-      });
+      return {
+        id: q.quotationNumber,
+        quotationId: q._id,
+        deal: q.customerName || (q.customer && q.customer.name) || 'Enterprise Account',
+        issue,
+        issueType,
+        flagged: 'Today',
+        action: q.requiresApproval ? 'Awaiting Approval' : 'Review scheduled',
+        actionStatus: 'pending',
+        rep: q.createdBy ? q.createdBy.name : 'J. Rao',
+        value: `$${(q.grandTotal || 0).toLocaleString()}`,
+        riskScore: q.riskScore || 25
+      };
+    });
 
-      return sendSuccess(res, dynamicDeals, 'Deal health alerts generated from active pipeline');
-    }
-
-    return sendSuccess(res, deals, 'Deal health alerts retrieved');
+    return sendSuccess(res, dynamicDeals, 'Deal health alerts generated from active pipeline');
   } catch (error) {
     next(error);
   }
@@ -49,8 +48,12 @@ const getDealHealthList = async (req, res, next) => {
 // @route   POST /api/deal-health/:id/action
 const takeDealHealthAction = async (req, res, next) => {
   try {
+    const mongoose = require('mongoose');
     const { actionType, note } = req.body;
-    let deal = await DealHealth.findById(req.params.id);
+    let deal = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      deal = await DealHealth.findById(req.params.id);
+    }
     if (!deal) {
       deal = await DealHealth.findOne({ quotationNumber: req.params.id });
     }

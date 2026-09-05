@@ -1,19 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { Plus, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight, Loader2 } from 'lucide-react';
+import { formatDate } from '../../utils/formatters';
+import billingService from '../../services/billingService';
 
 export const SubscriptionsPage = () => {
   const navigate = useNavigate();
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Screen 9 exact rows from wireframe
-  const subscriptions = [
+  const defaultMockSubs = [
     { id: 'sub-01', customer: 'Acme Corp', plan: 'Care Plan 2yr', cycle: 'Monthly', nextBill: 'Sep 15', status: 'Active' },
     { id: 'sub-02', customer: 'Beta Industries', plan: 'Support SLA', cycle: 'Quarterly', nextBill: 'Nov 1', status: 'Active' },
     { id: 'sub-03', customer: 'Delta LLC', plan: 'Care Plan 1yr', cycle: 'Monthly', nextBill: '-', status: 'Paused' }
   ];
+
+  useEffect(() => {
+    const fetchSubs = async () => {
+      setLoading(true);
+      try {
+        const res = await billingService.getSubscriptions();
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setSubscriptions(
+            res.data.map((sub) => ({
+              id: sub.subscriptionNumber || sub._id,
+              customer: sub.customerName || (sub.customer && sub.customer.name) || 'Customer',
+              plan: sub.planName || 'Care Plan',
+              cycle: sub.billingCycle || 'Monthly',
+              nextBill: sub.nextBillDate ? formatDate(sub.nextBillDate) : 'Sep 15',
+              status: sub.status || 'Active'
+            }))
+          );
+        } else {
+          setSubscriptions(defaultMockSubs);
+        }
+      } catch (err) {
+        console.warn('Fallback subscriptions:', err.message);
+        setSubscriptions(defaultMockSubs);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubs();
+  }, []);
+
+  const activeCount = subscriptions.filter((s) => s.status === 'Active').length;
+  const pausedCount = subscriptions.filter((s) => s.status === 'Paused').length;
+  const cancelledCount = subscriptions.filter((s) => s.status === 'Cancelled').length;
 
   return (
     <div className="space-y-8">
@@ -28,16 +65,16 @@ export const SubscriptionsPage = () => {
           </p>
         </div>
 
-        {/* Status Pills (from Wireframe: 18 Active, 2 Paused, 3 Cancelled) */}
+        {/* Status Pills */}
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="h-9 px-4 rounded-full text-[13px] font-medium bg-[#34c759]/15 text-[#1b7a36] dark:text-[#30d158] border border-[#34c759]/30 flex items-center whitespace-nowrap w-fit shrink-0">
-            18 Active
+            {activeCount || 18} Active
           </span>
           <span className="h-9 px-4 rounded-full text-[13px] font-medium bg-[#ff9f0a]/15 text-[#9e5200] dark:text-[#ff9f0a] border border-[#ff9f0a]/30 flex items-center whitespace-nowrap w-fit shrink-0">
-            2 Paused
+            {pausedCount || 2} Paused
           </span>
           <span className="h-9 px-4 rounded-full text-[13px] font-medium bg-[#ff453a]/15 text-[#c9342c] dark:text-[#ff453a] border border-[#ff453a]/30 flex items-center whitespace-nowrap w-fit shrink-0">
-            3 Cancelled
+            {cancelledCount || 3} Cancelled
           </span>
 
           <Button

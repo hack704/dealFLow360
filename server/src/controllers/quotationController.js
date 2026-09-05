@@ -20,7 +20,7 @@ const previewCalculation = async (req, res, next) => {
 // @route   POST /api/quotations
 const createQuotation = async (req, res, next) => {
   try {
-    const { customerId, title, items, notes, paymentTermsDays } = req.body;
+    const { customerId, title, items, notes, paymentTermsDays, status, submitForApproval } = req.body;
 
     if (!customerId || !items || items.length === 0) {
       return sendError(res, 'Customer and at least one item are required', 400);
@@ -29,6 +29,7 @@ const createQuotation = async (req, res, next) => {
     const calc = await processQuotationCalculation({ customerId, items });
 
     const quoteNumber = generateQuotationNumber();
+    const initialStatus = status || (submitForApproval ? 'pending_approval' : 'draft');
 
     const quotation = await Quotation.create({
       quotationNumber: quoteNumber,
@@ -48,10 +49,21 @@ const createQuotation = async (req, res, next) => {
       approvalReason: calc.approvalReason,
       paymentTermsDays: paymentTermsDays || 30,
       notes: notes || '',
+      status: initialStatus,
       createdBy: req.user ? req.user._id : null
     });
 
-    return sendSuccess(res, quotation, 'Quotation created successfully', 201);
+    if (initialStatus === 'pending_approval') {
+      try {
+        const { createApprovalRequest } = require('../services/approval/approvalEngine');
+        await createApprovalRequest(quotation, req.user || { _id: quotation.createdBy, name: quotation.customerName || 'Sales Rep' });
+      } catch (err) {
+        console.warn('[QUOTATION] Auto approval request creation notice:', err.message);
+      }
+    }
+
+    const populated = await Quotation.findById(quotation._id).populate('customer');
+    return sendSuccess(res, populated, 'Quotation created successfully', 201);
   } catch (error) {
     next(error);
   }
@@ -178,6 +190,15 @@ const updateQuotationStatus = async (req, res, next) => {
 
     quotation.status = status;
     await quotation.save();
+
+    if (status === 'approved' || status === 'accepted' || status === 'confirmed') {
+      try {
+        const { generateBillingFromQuotation } = require('../services/billing/billingEngine');
+        await generateBillingFromQuotation(quotation._id);
+      } catch (err) {
+        console.warn('[QUOTATION] Auto billing generation notice:', err.message);
+      }
+    }
 
     return sendSuccess(res, quotation, `Quotation status updated to ${status}`);
   } catch (error) {

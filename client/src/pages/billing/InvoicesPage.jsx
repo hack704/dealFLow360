@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Receipt, Calendar, ArrowUpRight, Search, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Receipt, Calendar, ArrowUpRight, Search, FileText, CheckCircle2, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatDate } from '../../utils/formatters';
+import billingService from '../../services/billingService';
 
 export const InvoicesPage = () => {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState('unpaid'); // 'all' | 'unpaid' | 'paid'
+  const [filter, setFilter] = useState('all'); // 'all' | 'unpaid' | 'paid'
   const [searchTerm, setSearchTerm] = useState('');
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const invoices = [
+  const defaultMockInvoices = [
     {
       id: 'INV-1042',
       customer: 'Acme Corp',
@@ -76,21 +79,53 @@ export const InvoicesPage = () => {
     }
   ];
 
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      setLoading(true);
+      try {
+        const res = await billingService.getInvoices();
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setInvoices(
+            res.data.map((inv) => ({
+              id: inv.invoiceNumber || inv._id,
+              _id: inv._id,
+              customer: inv.customerName || (inv.customer && inv.customer.name) || 'Customer',
+              amount: inv.grandTotal || inv.subtotal || 0,
+              status: inv.status || 'Unpaid',
+              dueDate: inv.dueDate ? formatDate(inv.dueDate) : 'Net 30',
+              type: inv.type || 'One-Time Order',
+              createdDate: inv.createdAt ? formatDate(inv.createdAt) : 'Today'
+            }))
+          );
+        } else {
+          setInvoices(defaultMockInvoices);
+        }
+      } catch (err) {
+        console.warn('Fallback invoices:', err.message);
+        setInvoices(defaultMockInvoices);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
+
   const filteredInvoices = invoices.filter((inv) => {
     const matchesFilter =
       filter === 'all'
         ? true
         : filter === 'unpaid'
-        ? inv.status === 'Unpaid'
-        : inv.status === 'Paid';
+        ? inv.status.toLowerCase() === 'unpaid'
+        : inv.status.toLowerCase() === 'paid';
     const matchesSearch =
       inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inv.customer.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const unpaidCount = invoices.filter((i) => i.status === 'Unpaid').length;
-  const paidCount = invoices.filter((i) => i.status === 'Paid').length;
+  const unpaidCount = invoices.filter((i) => i.status.toLowerCase() === 'unpaid').length;
+  const paidCount = invoices.filter((i) => i.status.toLowerCase() === 'paid').length;
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto pb-12">

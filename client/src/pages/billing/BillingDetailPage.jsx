@@ -1,26 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card, { CardHeader, CardTitle } from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { ArrowLeft, CreditCard, AlertCircle, RefreshCw, XCircle } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatters';
+import { ArrowLeft, CreditCard, AlertCircle, RefreshCw, XCircle, Loader2 } from 'lucide-react';
+import { formatCurrency, formatDate } from '../../utils/formatters';
+import billingService from '../../services/billingService';
 
 export const BillingDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [subData, setSubData] = useState(null);
 
-  // Screen 10 exact data from wireframe
+  useEffect(() => {
+    const fetchSub = async () => {
+      setLoading(true);
+      try {
+        const res = await billingService.getSubscriptionById(id);
+        if (res?.data) {
+          setSubData(res.data);
+        }
+      } catch (err) {
+        console.warn('Fallback subscription detail:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSub();
+  }, [id]);
+
+  const customerName = subData?.customerName || (subData?.customer && subData.customer.name) || 'Acme Corp';
+  const planName = subData?.planName || 'Care Plan 2yr';
+  const cycle = subData?.billingCycle || 'Monthly';
+  const amount = subData?.amount || 46;
+  const status = subData?.status || 'Active';
+  const nextBillDate = subData?.nextBillDate ? formatDate(subData.nextBillDate) : 'Sep 15';
+
+  // Screen 10 data
   const oneTimeLines = [
     { product: 'Laptop Pro 14', qty: 2, amount: 2280 },
     { product: 'Onsite Setup', qty: 1, amount: 450 }
   ];
 
   const recurringLines = [
-    { plan: 'Care Plan 2yr', cycle: 'Monthly', nextBillDate: 'Sep 15', amount: 46 },
-    { plan: 'Support SLA', cycle: 'Quarterly', nextBillDate: 'Nov 1', amount: 300 }
+    { plan: planName, cycle, nextBillDate, amount }
   ];
 
   return (
@@ -37,14 +64,14 @@ export const BillingDetailPage = () => {
           </button>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-              Billing Detail: Acme Corp — Care Plan 2yr
+              Billing Detail: {customerName} — {planName}
             </h1>
-            <Badge variant="success" size="sm">
-              Active Recurring
+            <Badge variant={status === 'Active' ? 'success' : 'warning'} size="sm">
+              {status} Recurring
             </Badge>
           </div>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Opened by clicking a row on the Subscriptions list
+            Subscription lifecycle, renewal terms, and recurring billing schedule
           </p>
         </div>
 

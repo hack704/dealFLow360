@@ -15,7 +15,11 @@ const submitCustomerCounterOffer = async ({
   lineRedlines = [],
   customerComment = ''
 }) => {
-  let quote = await Quotation.findById(quotationId);
+  const mongoose = require('mongoose');
+  let quote = null;
+  if (mongoose.Types.ObjectId.isValid(quotationId)) {
+    quote = await Quotation.findById(quotationId);
+  }
   if (!quote) {
     quote = await Quotation.findOne({ quotationNumber: quotationId });
   }

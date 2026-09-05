@@ -102,6 +102,13 @@ const processApprovalAction = async (requestId, user, action, note = '') => {
         quotation.status = QUOTATION_STATUSES.APPROVED;
         quotation.requiresApproval = false;
         await quotation.save();
+
+        try {
+          const { generateBillingFromQuotation } = require('../billing/billingEngine');
+          await generateBillingFromQuotation(quotation._id);
+        } catch (err) {
+          console.warn('[APPROVAL] Billing auto-generation note:', err.message);
+        }
       }
     }
   } else if (action === 'return') {

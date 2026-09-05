@@ -14,7 +14,9 @@ const QUOTATION_STATUSES = {
   APPROVED: 'approved',
   REJECTED: 'rejected',
   SENT_TO_CUSTOMER: 'sent_to_customer',
+  NEGOTIATION: 'negotiation',
   ACCEPTED: 'accepted',
+  CONFIRMED: 'confirmed',
   EXPIRED: 'expired'
 };
 

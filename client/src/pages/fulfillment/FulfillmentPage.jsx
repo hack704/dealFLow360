@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card, { CardHeader, CardTitle } from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
-import { Warehouse, Package, ArrowRight, Truck } from 'lucide-react';
+import { Warehouse, Package, ArrowRight, Truck, Loader2 } from 'lucide-react';
+import fulfillmentService from '../../services/fulfillmentService';
 
 export const FulfillmentPage = () => {
   const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Screen 7 exact tables from wireframe
   const stockInventory = [
@@ -14,10 +17,40 @@ export const FulfillmentPage = () => {
     { warehouse: 'Main Warehouse', product: 'Docking Station', inStock: 65, reserved: 12, available: 53 }
   ];
 
-  const pendingOrders = [
+  const defaultMockOrders = [
     { order: 'Q-1042', customer: 'Acme Corp', status: 'Split Pending', warehouses: 'Main + East Depot' },
     { order: 'Q-1030', customer: 'Zenith Co', status: 'Backorder', warehouses: 'East Depot' }
   ];
+
+  useEffect(() => {
+    const fetchFulfillment = async () => {
+      setLoading(true);
+      try {
+        const res = await fulfillmentService.getFulfillmentList();
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setOrders(
+            res.data.map((o) => ({
+              order: o.id || o.quotationNumber || 'Order',
+              quotationId: o.quotationId || o.id,
+              customer: o.customer || o.customerName || 'Customer',
+              status: o.status || 'Ready to Pack',
+              warehouses: o.allocation || 'Main Warehouse (100%)',
+              value: o.value
+            }))
+          );
+        } else {
+          setOrders(defaultMockOrders);
+        }
+      } catch (err) {
+        console.warn('Fallback fulfillment orders:', err.message);
+        setOrders(defaultMockOrders);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFulfillment();
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -91,7 +124,13 @@ export const FulfillmentPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
-              {pendingOrders.map((ord) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="py-8 text-center text-[#6e6e73]">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#0071e3]" />
+                  </td>
+                </tr>
+              ) : orders.map((ord) => (
                 <tr
                   key={ord.order}
                   onClick={() => navigate(`/fulfillment/${ord.order}`)}

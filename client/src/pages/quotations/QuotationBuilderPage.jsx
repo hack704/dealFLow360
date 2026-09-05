@@ -44,6 +44,8 @@ export const QuotationBuilderPage = () => {
         title: title || `Enterprise Quote for ${customer.name}`,
         notes,
         paymentTermsDays,
+        status,
+        submitForApproval: status === 'pending_approval',
         items: items.map((it) => ({
           productId: it.productId || it.product?._id || it.product,
           quantity: it.quantity,
@@ -56,7 +58,11 @@ export const QuotationBuilderPage = () => {
         setSuccessMessage(`Quotation ${res.data.quotationNumber} successfully generated!`);
         setTimeout(() => {
           resetBuilder();
-          navigate(`/quotations/${res.data._id}`);
+          if (status === 'pending_approval') {
+            navigate(`/approvals/${res.data._id}`);
+          } else {
+            navigate(`/quotations/${res.data._id}`);
+          }
         }, 1200);
       }
     } catch (err) {

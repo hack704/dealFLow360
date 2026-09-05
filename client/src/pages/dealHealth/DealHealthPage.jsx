@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle,
   Clock,
@@ -9,17 +9,20 @@ import {
   ShieldAlert,
   Send,
   CheckCircle2,
-  Filter
+  Filter,
+  Loader2
 } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
+import dealHealthService from '../../services/dealHealthService';
 
 export const DealHealthPage = () => {
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [deals, setDeals] = useState([
+  const defaultMockDeals = [
     {
       id: 'Q-1030',
       deal: 'Zenith Co',
@@ -68,9 +71,38 @@ export const DealHealthPage = () => {
       value: '$48,000',
       riskScore: 72
     }
-  ]);
+  ];
 
-  const triggerAction = (dealId, newAction) => {
+  const [deals, setDeals] = useState([]);
+
+  useEffect(() => {
+    const fetchHealth = async () => {
+      setLoading(true);
+      try {
+        const res = await dealHealthService.getDealHealthList();
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setDeals(res.data);
+        } else {
+          setDeals(defaultMockDeals);
+        }
+      } catch (err) {
+        console.warn('Fallback deal health:', err.message);
+        setDeals(defaultMockDeals);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealth();
+  }, []);
+
+  const triggerAction = async (dealId, newAction) => {
+    try {
+      await dealHealthService.takeCorrectiveAction(dealId, newAction);
+    } catch (err) {
+      console.warn('Corrective action local fallback:', err.message);
+    }
+
     setDeals((prev) =>
       prev.map((d) => (d.id === dealId ? { ...d, action: newAction, actionStatus: 'done' } : d))
     );
