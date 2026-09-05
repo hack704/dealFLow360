@@ -126,6 +126,112 @@ const calculateProrationPreview = (req, res, next) => {
   }
 };
 
+// @desc    Update / Modify subscription (plan change, cycle, amount, or pause/resume)
+// @route   PUT /api/billing/subscriptions/:id
+const updateSubscription = async (req, res, next) => {
+  try {
+    let sub = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      sub = await Subscription.findById(req.params.id);
+    }
+    if (!sub) {
+      sub = await Subscription.findOne({ subscriptionNumber: req.params.id });
+    }
+    if (!sub) {
+      return sendError(res, 'Subscription not found', 404);
+    }
+
+    const { planName, billingCycle, amount, status, notes } = req.body;
+    const oldPlan = sub.planName;
+    const oldAmount = sub.amount;
+
+    if (planName) sub.planName = planName;
+    if (billingCycle) sub.billingCycle = billingCycle;
+    if (amount !== undefined && !isNaN(Number(amount))) sub.amount = Number(amount);
+    if (status) sub.status = status;
+
+    let actionNote = notes || 'Subscription modified';
+    if (planName && planName !== oldPlan) {
+      actionNote = `Plan changed from ${oldPlan} to ${planName}`;
+    }
+    if (amount !== undefined && Number(amount) !== oldAmount) {
+      actionNote += ` (Rate updated from $${oldAmount} to $${amount})`;
+    }
+
+    if (!Array.isArray(sub.history)) {
+      sub.history = [];
+    }
+
+    sub.history.push({
+      action: status === 'Paused' ? 'Plan Paused' : (status === 'Cancelled' ? 'Plan Cancelled' : 'Plan Modified'),
+      date: new Date(),
+      notes: actionNote
+    });
+
+    await sub.save();
+    return sendSuccess(res, sub, 'Subscription updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Cancel subscription
+// @route   POST /api/billing/subscriptions/:id/cancel
+const cancelSubscription = async (req, res, next) => {
+  try {
+    let sub = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      sub = await Subscription.findById(req.params.id);
+    }
+    if (!sub) {
+      sub = await Subscription.findOne({ subscriptionNumber: req.params.id });
+    }
+    if (!sub) {
+      return sendError(res, 'Subscription not found', 404);
+    }
+
+    const { reason = 'Cancelled by customer / admin' } = req.body;
+    sub.status = 'Cancelled';
+    if (!Array.isArray(sub.history)) {
+      sub.history = [];
+    }
+
+    sub.history.push({
+      action: 'Subscription Cancelled',
+      date: new Date(),
+      notes: reason
+    });
+
+    await sub.save();
+    return sendSuccess(res, sub, 'Subscription cancelled successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete / Remove subscription
+// @route   DELETE /api/billing/subscriptions/:id
+const deleteSubscription = async (req, res, next) => {
+  try {
+    let sub = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      sub = await Subscription.findById(req.params.id);
+    }
+    if (!sub) {
+      sub = await Subscription.findOne({ subscriptionNumber: req.params.id });
+    }
+    if (!sub) {
+      return sendError(res, 'Subscription not found', 404);
+    }
+
+    const subNum = sub.subscriptionNumber;
+    await Subscription.deleteOne({ _id: sub._id });
+    return sendSuccess(res, { subscriptionNumber: subNum }, 'Subscription removed successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Generate billing (invoice and subscription) from quotation
 // @route   POST /api/billing/generate/:id
 const generateBilling = async (req, res, next) => {
@@ -143,6 +249,9 @@ module.exports = {
   recordPayment,
   getSubscriptions,
   getSubscriptionById,
+  updateSubscription,
+  cancelSubscription,
+  deleteSubscription,
   calculateProrationPreview,
   generateBilling
 };

@@ -31,6 +31,21 @@ export const billingService = {
     return res.data;
   },
 
+  updateSubscription: async (id, data) => {
+    const res = await api.put(`/billing/subscriptions/${id}`, data);
+    return res.data;
+  },
+
+  cancelSubscription: async (id, reason = 'Cancelled by administrator') => {
+    const res = await api.post(`/billing/subscriptions/${id}/cancel`, { reason });
+    return res.data;
+  },
+
+  deleteSubscription: async (id) => {
+    const res = await api.delete(`/billing/subscriptions/${id}`);
+    return res.data;
+  },
+
   generateBilling: async (quotationId) => {
     const res = await api.post(`/billing/generate/${quotationId}`);
     return res.data;

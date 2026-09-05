@@ -6,6 +6,9 @@ const {
   recordPayment,
   getSubscriptions,
   getSubscriptionById,
+  updateSubscription,
+  cancelSubscription,
+  deleteSubscription,
   calculateProrationPreview,
   generateBilling
 } = require('../controllers/billingController');
@@ -19,6 +22,10 @@ router.post('/invoices/:id/pay', recordPayment);
 
 router.get('/subscriptions', getSubscriptions);
 router.get('/subscriptions/:id', getSubscriptionById);
+router.put('/subscriptions/:id', updateSubscription);
+router.patch('/subscriptions/:id', updateSubscription);
+router.post('/subscriptions/:id/cancel', cancelSubscription);
+router.delete('/subscriptions/:id', deleteSubscription);
 router.post('/proration-preview', calculateProrationPreview);
 
 module.exports = router;

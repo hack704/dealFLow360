@@ -20,7 +20,9 @@ import {
   Download,
   Loader2,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Boxes,
+  ArrowRight
 } from 'lucide-react';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { downloadQuotationPDF } from '../../utils/pdfExport';
@@ -247,11 +249,27 @@ export const QuotationDetailsPage = () => {
               View Approval Progress
             </Button>
           ) : status === 'approved' ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#34c759]/15 text-[#1b7e36] dark:text-[#30d158] font-semibold text-[13px] border border-[#34c759]/30">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Approved</span>
               </span>
+              <Button
+                onClick={() => navigate(`/fulfillment/${quotation?._id || quoteId}`)}
+                variant="primary"
+                size="md"
+                icon={Boxes}
+              >
+                Proceed to Warehouse Split →
+              </Button>
+              <Button
+                onClick={() => navigate(`/portal?quote=${quotation?._id || quoteId}`)}
+                variant="secondary"
+                size="md"
+                icon={ExternalLink}
+              >
+                Open Customer Portal
+              </Button>
               <Button
                 onClick={() => handleAction('draft')}
                 disabled={isSubmitting}

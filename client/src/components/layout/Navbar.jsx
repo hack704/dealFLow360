@@ -82,56 +82,61 @@ export const Navbar = () => {
               <NavLink
                 key={tab.to}
                 to={tab.to}
-                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-[13px] transition-all duration-150 whitespace-nowrap select-none border ${
+                title={tab.label}
+                aria-label={tab.label}
+                className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 xl:px-3.5 py-1.5 rounded-xl text-[12.5px] sm:text-[13px] transition-all duration-150 whitespace-nowrap select-none border ${
                   isActive
                     ? 'bg-[#0071e3]/10 dark:bg-[#2997ff]/15 text-[#0071e3] dark:text-[#2997ff] border-[#0071e3]/25 dark:border-[#2997ff]/30 font-semibold shadow-sm'
                     : 'bg-transparent text-[#6e6e73] dark:text-[#86868b] border-transparent hover:text-[#1d1d1f] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] font-medium'
                 }`}
               >
                 <Icon
-                  className={`w-4 h-4 shrink-0 ${
+                  className={`w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 transition-transform ${
                     isActive
-                      ? 'text-[#0071e3] dark:text-[#2997ff]'
+                      ? 'text-[#0071e3] dark:text-[#2997ff] scale-105'
                       : 'text-[#86868b] dark:text-[#6e6e73]'
                   }`}
                 />
-                <span>{tab.label}</span>
+                <span className={`${isActive ? 'inline' : 'hidden xl:inline'}`}>
+                  {tab.label}
+                </span>
               </NavLink>
             );
           })}
         </nav>
 
         {/* Right Actions: Theme Toggle, View Switcher & User Profile */}
-        <div className="flex items-center space-x-2.5 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
           {/* Apple Transparent Icon Gesture: Light / Dark Mode Toggle */}
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-black/[0.03] hover:bg-black/[0.07] dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white border border-black/[0.06] dark:border-white/[0.08] transition-all duration-200 shadow-sm"
+            className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center bg-black/[0.03] hover:bg-black/[0.07] dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white border border-black/[0.06] dark:border-white/[0.08] transition-all duration-200 shadow-sm"
           >
             {isDark ? (
-              <Sun className="w-4 h-4 text-[#ff9f0a]" />
+              <Sun className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff9f0a] shrink-0" />
             ) : (
-              <Moon className="w-4 h-4 text-[#0071e3]" />
+              <Moon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#0071e3] shrink-0" />
             )}
           </button>
 
           {isPortal ? (
             <button
               onClick={() => navigate('/dashboard')}
-              className="h-9 px-4 rounded-xl text-[13px] font-medium bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-[#1d1d1f] dark:text-white border border-black/[0.08] dark:border-white/[0.1] transition-colors whitespace-nowrap"
+              className="h-8.5 sm:h-9 px-3 sm:px-4 rounded-xl text-[12px] sm:text-[13px] font-medium bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-[#1d1d1f] dark:text-white border border-black/[0.08] dark:border-white/[0.1] transition-colors whitespace-nowrap"
             >
               Back to Internal
             </button>
           ) : (
             <button
               onClick={() => navigate('/portal')}
-              className="h-9 px-4 rounded-xl text-[13px] font-medium bg-[#0071e3]/10 dark:bg-[#0071e3]/15 hover:bg-[#0071e3]/20 dark:hover:bg-[#0071e3]/25 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 dark:border-[#0071e3]/30 transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+              className="h-8.5 sm:h-9 px-2.5 sm:px-4 rounded-xl text-[12px] sm:text-[13px] font-medium bg-[#0071e3]/10 dark:bg-[#0071e3]/15 hover:bg-[#0071e3]/20 dark:hover:bg-[#0071e3]/25 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 dark:border-[#0071e3]/30 transition-colors flex items-center gap-1 sm:gap-1.5 shadow-sm whitespace-nowrap"
             >
-              <span>Customer Portal</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Customer Portal</span>
+              <span className="sm:hidden">Portal</span>
+              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
             </button>
           )}
 

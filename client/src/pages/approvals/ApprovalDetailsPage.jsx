@@ -15,7 +15,9 @@ import {
   Check,
   Loader2,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  Boxes,
+  ArrowRight
 } from 'lucide-react';
 import { formatCurrency, formatPercent, formatDate } from '../../utils/formatters';
 
@@ -261,36 +263,61 @@ export const ApprovalDetailsPage = () => {
         </div>
 
         {/* Action Buttons (from Wireframe) */}
-        <div className="flex items-center space-x-3">
-          <Button
-            onClick={() => handleAction('approve')}
-            disabled={isProcessing || currentStep === 4}
-            variant="success"
-            size="md"
-            icon={CheckCircle}
-          >
-            {currentStep === 4 ? 'Already Approved' : 'Approve'}
-          </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          {currentStep === 4 ? (
+            <>
+              <Button
+                onClick={() => navigate(`/fulfillment/${approval?.quotationId?._id || approval?.quotationId || quotation?._id || id}`)}
+                variant="primary"
+                size="md"
+                icon={Boxes}
+              >
+                Proceed to Fulfillment →
+              </Button>
+              <Button
+                onClick={() => navigate(`/portal?quote=${approval?.quotationId?._id || approval?.quotationId || quotation?._id || id}`)}
+                variant="secondary"
+                size="md"
+                icon={ExternalLink}
+              >
+                Open Customer Portal
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => handleAction('approve')}
+              disabled={isProcessing}
+              variant="success"
+              size="md"
+              icon={CheckCircle}
+            >
+              Approve Quotation
+            </Button>
+          )}
 
-          <Button
-            onClick={() => handleAction('return')}
-            disabled={isProcessing}
-            variant="outline"
-            size="md"
-            icon={RotateCcw}
-          >
-            Return for Revision
-          </Button>
+          {currentStep !== 4 && (
+            <>
+              <Button
+                onClick={() => handleAction('return')}
+                disabled={isProcessing}
+                variant="outline"
+                size="md"
+                icon={RotateCcw}
+              >
+                Return for Revision
+              </Button>
 
-          <Button
-            onClick={() => handleAction('reject')}
-            disabled={isProcessing}
-            variant="danger"
-            size="md"
-            icon={XCircle}
-          >
-            Reject
-          </Button>
+              <Button
+                onClick={() => handleAction('reject')}
+                disabled={isProcessing}
+                variant="danger"
+                size="md"
+                icon={XCircle}
+              >
+                Reject
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
