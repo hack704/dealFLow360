@@ -31,5 +31,12 @@ lerna-debug.log*
 *.sln
 *.sw?
 
-# Test reports
+# Test files and reports
+test_*.js
+test_*.py
+server/test_*.js
 playwright_reports/
+
+# Agent documentation
+docs/agents/
+
