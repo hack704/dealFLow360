@@ -60,10 +60,16 @@ graph TD
     Engines --> Database
 ```
 
-### Technology Stack Choices & Rationale
+### 2.1 Technology Stack Choices & Rationale
 - **Frontend:** React 18, Vite (sub-second HMR), Tailwind CSS (consistent design token system with dark/light mode support), Lucide React (standardized iconography), Axios (interceptor-based JWT auth lifecycle).
 - **Backend:** Node.js + Express.js (non-blocking I/O suited for event-driven quote processing), Mongoose ODM (schema validation, indexing, and object modeling for complex nested quotation items).
 - **Security:** Bcrypt password hashing (salt factor 10), stateless JWT tokens with role-based authorization middleware (`sales_rep`, `sales_manager`, `finance`, `admin`, `customer`).
+
+### 2.2 Domain Class Diagram & Entity Relationships
+
+See detailed reference in [`docs/domain-model.md`](./domain-model.md).
+
+![DealFlow360 Domain Model](./domain-model.png)
 
 ---
 
