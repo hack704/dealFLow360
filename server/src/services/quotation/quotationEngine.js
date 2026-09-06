@@ -47,8 +47,12 @@ const processQuotationCalculation = async ({ customerId, items = [] }) => {
     grandTotal: discountResult.grandTotal
   });
 
-  // 3. Generate smart upsells
-  const upsellRecommendations = await getUpsellRecommendations(productIds);
+  // 3. Generate smart upsells with live deal margin context
+  const upsellRecommendations = await getUpsellRecommendations(productIds, {
+    grandTotal: discountResult.grandTotal,
+    totalCost: discountResult.totalCost,
+    blendedMarginPercent: discountResult.blendedMarginPercent
+  });
 
   return {
     customer,
