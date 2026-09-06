@@ -3,8 +3,8 @@ import { useQuotation } from '../../context/QuotationContext';
 import Card, { CardHeader, CardTitle } from '../common/Card';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
-import { Sparkles, Plus, TrendingUp, X, Tag, Check, DollarSign, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
-import { formatCurrency, formatPercent } from '../../utils/formatters';
+import { Sparkles, Plus, TrendingUp, Tag, Check, RefreshCw, ShieldCheck } from 'lucide-react';
+import { formatCurrency } from '../../utils/formatters';
 
 export const UpsellPanel = () => {
   const { calculation, items, addItem } = useQuotation();
@@ -14,10 +14,20 @@ export const UpsellPanel = () => {
   // Dynamic deal financial baseline
   const currentRevenue =
     calculation?.grandTotal ||
-    items.reduce((acc, it) => acc + (it.listPrice || 0) * (it.quantity || 1) * (1 - (it.discountPercent || 0) / 100), 0) ||
+    items.reduce(
+      (acc, it) =>
+        acc +
+        (Number(it.listPrice) || 0) *
+          (Number(it.quantity) || 1) *
+          (1 - (Number(it.discountPercent) || 0) / 100),
+      0
+    ) ||
     12000;
   const currentCost =
-    items.reduce((acc, it) => acc + (it.unitCost || 0) * (it.quantity || 1), 0) || currentRevenue * 0.58;
+    items.reduce(
+      (acc, it) => acc + (Number(it.unitCost) || 0) * (Number(it.quantity) || 1),
+      0
+    ) || currentRevenue * 0.58;
   const currentMargin = currentRevenue > 0 ? ((currentRevenue - currentCost) / currentRevenue) * 100 : 42;
 
   // Catalog curated fallback suggestions with distinct enterprise profiles
@@ -31,7 +41,8 @@ export const UpsellPanel = () => {
         unitCost: 2400,
         isPromoted: true
       },
-      rationale: '⭐ High-Availability SLA: 15-min enterprise response guarantee, dedicated technical account manager & priority engineering escalation.',
+      rationale:
+        '⭐ High-Availability SLA: 15-min response guarantee, dedicated technical account manager & priority escalation.',
       isPromoted: true,
       promoTag: 'Featured SLA'
     },
@@ -44,7 +55,8 @@ export const UpsellPanel = () => {
         unitCost: 4500,
         isPromoted: true
       },
-      rationale: '⭐ Strategic Services: White-glove database migration, tenant provisioning, and staff certification (85% co-purchase rate).',
+      rationale:
+        '⭐ Turnkey Professional Services: White-glove database migration, tenant provisioning, and staff certification.',
       isPromoted: true,
       promoTag: 'Turnkey Onboarding'
     },
@@ -57,7 +69,8 @@ export const UpsellPanel = () => {
         unitCost: 7200,
         isPromoted: false
       },
-      rationale: '🔗 Architecture Core: Anchor enterprise license unlocking multi-currency CPQ, workflow automations, and scale.',
+      rationale:
+        '🔗 Architecture Core: Anchor enterprise license unlocking multi-currency CPQ, workflow automations, and scale.',
       isPromoted: false
     },
     {
@@ -69,7 +82,8 @@ export const UpsellPanel = () => {
         unitCost: 2700,
         isPromoted: false
       },
-      rationale: '⚡ Predictive Intelligence: Real-time margin protection, automated concession guardrails, and deal slippage telemetry.',
+      rationale:
+        '⚡ AI Intelligence: Real-time predictive margin protection, automated concession guardrails, and deal scoring.',
       isPromoted: false
     }
   ];
@@ -105,11 +119,11 @@ export const UpsellPanel = () => {
 
   const getCategoryColor = (cat = '') => {
     const c = cat.toLowerCase();
-    if (c.includes('support')) return 'text-[#0071e3] bg-[#0071e3]/10 border-[#0071e3]/20';
-    if (c.includes('service')) return 'text-[#bf5af2] bg-[#bf5af2]/10 border-[#bf5af2]/20';
-    if (c.includes('software')) return 'text-[#5e5ce6] bg-[#5e5ce6]/10 border-[#5e5ce6]/20';
-    if (c.includes('subscription')) return 'text-[#30d158] bg-[#30d158]/10 border-[#30d158]/20';
-    return 'text-[#ff9f0a] bg-[#ff9f0a]/10 border-[#ff9f0a]/20';
+    if (c.includes('support')) return 'text-[#0071e3] dark:text-[#2997ff] bg-[#0071e3]/10 border-[#0071e3]/20';
+    if (c.includes('service')) return 'text-[#9c42db] dark:text-[#bf5af2] bg-[#bf5af2]/10 border-[#bf5af2]/20';
+    if (c.includes('software')) return 'text-[#5048e5] dark:text-[#7d7aff] bg-[#5e5ce6]/10 border-[#5e5ce6]/20';
+    if (c.includes('subscription')) return 'text-[#1b7a36] dark:text-[#30d158] bg-[#30d158]/10 border-[#30d158]/20';
+    return 'text-[#9e5200] dark:text-[#ff9f0a] bg-[#ff9f0a]/10 border-[#ff9f0a]/20';
   };
 
   if (activeRecommendations.length === 0) {
@@ -118,7 +132,7 @@ export const UpsellPanel = () => {
         <div className="flex flex-col items-center justify-center py-4 space-y-2">
           <ShieldCheck className="w-8 h-8 text-[#30d158]" />
           <h5 className="text-[14px] font-semibold text-[#1d1d1f] dark:text-white">
-            All Upsell Suggestions Reviewed
+            All Upsell Suggestions Evaluated
           </h5>
           <p className="text-[12px] text-[#86868b] max-w-sm">
             You have evaluated all active recommendations for this deal configuration.
@@ -136,14 +150,15 @@ export const UpsellPanel = () => {
   }
 
   return (
-    <Card className="p-6 sm:p-7 rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card mb-6">
-      <CardHeader className="pb-4 border-b border-black/[0.08] dark:border-white/[0.08] mb-5">
+    <Card className="p-5 sm:p-6 rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card mb-6">
+      {/* Header with Title and Adaptive Status Indicator */}
+      <CardHeader className="pb-3.5 border-b border-black/[0.08] dark:border-white/[0.08] mb-4">
         <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-tr from-[#0071e3]/15 to-[#2997ff]/20 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 shadow-xs">
-            <Sparkles className="w-4.5 h-4.5" />
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#0071e3]/10 dark:bg-[#2997ff]/15 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 shadow-xs shrink-0">
+            <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <CardTitle className="text-[16px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+            <CardTitle className="text-[15px] sm:text-[16px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
               Upsell & Cross-Sell Suggestions
             </CardTitle>
             <p className="text-[12px] text-[#6e6e73] dark:text-[#86868b] mt-0.5">
@@ -152,14 +167,15 @@ export const UpsellPanel = () => {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="inline-flex items-center gap-1.5 text-[11.5px] font-mono px-3 py-1 rounded-full bg-[#0071e3]/10 text-[#0071e3] dark:text-[#2997ff] font-semibold border border-[#0071e3]/20">
+          <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2.5 py-1 rounded-full bg-[#0071e3]/10 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] dark:bg-[#2997ff] animate-pulse" />
             Live Margin Adaptive
           </span>
         </div>
       </CardHeader>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* 2x2 Grid of Uniform-Height, Balanced Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {activeRecommendations.slice(0, 4).map((rec) => {
           const prod = rec.product;
           const isPromoted = prod.isPromoted || rec.isPromoted;
@@ -182,66 +198,69 @@ export const UpsellPanel = () => {
           return (
             <div
               key={prod._id}
-              className={`p-4.5 rounded-2xl border transition-all flex flex-col justify-between ${
+              className={`p-4 rounded-2xl border transition-all flex flex-col justify-between min-h-[164px] ${
                 isInCart
                   ? 'bg-black/[0.01] dark:bg-white/[0.01] border-[#30d158]/30 shadow-xs'
-                  : 'bg-black/[0.02] dark:bg-white/[0.03] border-black/[0.08] dark:border-white/[0.08] hover:border-[#0071e3]/40 dark:hover:border-[#2997ff]/40 hover:shadow-sm'
+                  : 'bg-black/[0.02] dark:bg-white/[0.02] border-black/[0.07] dark:border-white/[0.08] hover:border-[#0071e3]/40 dark:hover:border-[#2997ff]/40 hover:shadow-xs'
               }`}
             >
-              <div>
+              {/* Top Section: Title & Price on Row 1, Category & Tags on Row 2 */}
+              <div className="space-y-2">
                 <div className="flex justify-between items-start gap-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <h5 className="text-[14px] font-semibold text-[#1d1d1f] dark:text-white leading-tight">
-                        {prod.name}
-                      </h5>
-                      {isPromoted && (
-                        <span className="px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#ff9f0a]/15 text-[#9e5200] dark:text-[#ff9f0a] border border-[#ff9f0a]/30 flex items-center gap-1 whitespace-nowrap">
-                          <Tag className="w-3 h-3" /> Promoted
-                        </span>
-                      )}
-                    </div>
-                    <span
-                      className={`text-[11px] font-mono px-2 py-0.5 rounded-md inline-block border ${getCategoryColor(
-                        prod.category
-                      )}`}
-                    >
-                      {prod.category}
-                    </span>
-                  </div>
-
-                  <span className="text-[14px] font-mono font-bold text-[#0071e3] dark:text-[#2997ff] whitespace-nowrap">
+                  <h5 className="text-[13.5px] sm:text-[14px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] leading-snug">
+                    {prod.name}
+                  </h5>
+                  <span className="text-[14px] sm:text-[15px] font-bold text-[#0071e3] dark:text-[#2997ff] tabular-nums tracking-tight whitespace-nowrap shrink-0">
                     {formatCurrency(basePrice)}
                   </span>
                 </div>
 
-                <p className="text-[12px] text-[#6e6e73] dark:text-[#86868b] mt-2.5 leading-relaxed">
+                {/* Badges Row: Category + Promoted Chip */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span
+                    className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${getCategoryColor(
+                      prod.category
+                    )}`}
+                  >
+                    {prod.category}
+                  </span>
+                  {isPromoted && (
+                    <span className="px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#ff9f0a]/15 text-[#9e5200] dark:text-[#ff9f0a] border border-[#ff9f0a]/30 flex items-center gap-1 whitespace-nowrap">
+                      <Tag className="w-3 h-3" /> Promoted
+                    </span>
+                  )}
+                </div>
+
+                {/* Clean 2-line Description / Rationale */}
+                <p className="text-[12px] text-[#6e6e73] dark:text-[#86868b] leading-relaxed line-clamp-2">
                   {rec.rationale || 'Frequently co-purchased with this enterprise configuration.'}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11.5px] text-[#1b7a36] dark:text-[#30d158] flex items-center gap-1 font-mono font-semibold whitespace-nowrap">
-                    <TrendingUp className="w-3.5 h-3.5" /> +{marginDeltaPt}% Margin Delta
+              {/* Bottom Action Footer with Clean Sans-Serif Tabular Metrics */}
+              <div className="mt-3.5 pt-2.5 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between gap-2">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-[12px] text-[#1b7a36] dark:text-[#30d158] font-semibold flex items-center gap-1 tabular-nums whitespace-nowrap">
+                    <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                    +{marginDeltaPt}% Margin Delta
                   </span>
-                  <span className="text-[11px] text-[#86868b] font-mono hidden sm:inline-block">
+                  <span className="text-[11px] text-[#86868b] dark:text-[#6e6e73] tabular-nums whitespace-nowrap hidden sm:inline-block">
                     (+{formatCurrency(grossProfitLift)} profit)
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-1.5">
+                <div className="flex items-center space-x-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => handleDismiss(prod._id)}
-                    className="px-2.5 py-1 text-[12px] font-medium text-[#6e6e73] hover:text-[#ff453a] dark:text-[#86868b] dark:hover:text-[#ff453a] transition-colors rounded-lg hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                    className="px-2 py-1 text-[11.5px] font-medium text-[#86868b] hover:text-[#ff453a] dark:text-[#6e6e73] dark:hover:text-[#ff453a] transition-colors rounded-lg hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
                     title="Dismiss this recommendation"
                   >
                     Dismiss
                   </button>
 
                   {isJustAdded || isInCart ? (
-                    <span className="px-3 py-1.5 text-[12px] font-semibold text-[#1b7a36] dark:text-[#30d158] bg-[#30d158]/15 border border-[#30d158]/30 rounded-xl flex items-center gap-1 whitespace-nowrap shadow-xs">
+                    <span className="px-2.5 py-1 text-[11.5px] font-semibold text-[#1b7a36] dark:text-[#30d158] bg-[#30d158]/15 border border-[#30d158]/30 rounded-lg flex items-center gap-1 whitespace-nowrap shadow-xs">
                       <Check className="w-3.5 h-3.5" /> In Quote
                     </span>
                   ) : (

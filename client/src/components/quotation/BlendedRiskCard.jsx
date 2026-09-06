@@ -126,10 +126,10 @@ export const BlendedRiskCard = () => {
       {/* Two Metric Tiles: Composite Risk Score + Predicted Win Rate */}
       <div className="grid grid-cols-2 gap-4 pb-5 border-b border-black/[0.08] dark:border-white/[0.08] text-center">
         <div className="p-4 bg-black/[0.02] dark:bg-white/[0.04] rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
-          <div className="text-[11px] text-[#6e6e73] dark:text-[#86868b] uppercase tracking-wider font-mono">
+          <div className="text-[11px] font-semibold text-[#86868b] uppercase tracking-wider">
             Composite Risk Score
           </div>
-          <div className="text-[28px] font-bold font-mono text-[#1d1d1f] dark:text-[#f5f5f7] mt-1.5">
+          <div className="text-[26px] sm:text-[28px] font-bold tabular-nums tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7] mt-1">
             {riskScore}
             <span className="text-[13px] text-[#86868b] font-normal ml-0.5">/100</span>
           </div>
@@ -150,11 +150,11 @@ export const BlendedRiskCard = () => {
         </div>
 
         <div className="p-4 bg-black/[0.02] dark:bg-white/[0.04] rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
-          <div className="text-[11px] text-[#6e6e73] dark:text-[#86868b] uppercase tracking-wider font-mono flex items-center justify-center gap-1.5">
+          <div className="text-[11px] font-semibold text-[#86868b] uppercase tracking-wider flex items-center justify-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-[#1b7a36] dark:text-[#30d158]" />
             <span>Predicted Win Rate</span>
           </div>
-          <div className="text-[28px] font-bold font-mono text-[#1b7a36] dark:text-[#30d158] mt-1.5">
+          <div className="text-[26px] sm:text-[28px] font-bold tabular-nums tracking-tight text-[#1b7a36] dark:text-[#30d158] mt-1">
             {winProbability}%
           </div>
 
@@ -169,7 +169,7 @@ export const BlendedRiskCard = () => {
 
       {/* Identified Risk Factors / Diagnostics */}
       <div className="mt-5 space-y-2.5">
-        <div className="text-[11px] font-semibold text-[#6e6e73] dark:text-[#86868b] uppercase tracking-wider font-mono">
+        <div className="text-[11px] font-semibold text-[#86868b] uppercase tracking-wider">
           Diagnostic Factors
         </div>
 

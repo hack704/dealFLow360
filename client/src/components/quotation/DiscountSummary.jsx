@@ -116,7 +116,7 @@ export const DiscountSummary = () => {
         {/* Pricing Line Items */}
         <div className="flex justify-between items-center text-[#6e6e73] dark:text-[#86868b]">
           <span>Gross Catalog Subtotal</span>
-          <span className="font-mono text-[#1d1d1f] dark:text-[#f5f5f7] font-semibold text-[14px]">
+          <span className="tabular-nums text-[#1d1d1f] dark:text-[#f5f5f7] font-semibold text-[14px]">
             {formatCurrency(subtotal)}
           </span>
         </div>
@@ -126,7 +126,7 @@ export const DiscountSummary = () => {
             <Tag className="w-4 h-4 text-[#1b7a36] dark:text-[#30d158]" />
             <span>Applied Volume & Tier Discounts</span>
           </div>
-          <span className="font-mono text-[#1b7a36] dark:text-[#30d158] font-semibold text-[14px]">
+          <span className="tabular-nums text-[#1b7a36] dark:text-[#30d158] font-semibold text-[14px]">
             -{formatCurrency(totalDiscount)} ({formatPercent(discountPercent)})
           </span>
         </div>
@@ -135,7 +135,7 @@ export const DiscountSummary = () => {
           <span>Target Deal Blended Margin</span>
           <div className="flex items-center space-x-2.5">
             <span
-              className={`font-mono font-bold text-[14px] ${
+              className={`tabular-nums font-bold text-[14px] ${
                 blendedMargin >= 40
                   ? 'text-[#1b7a36] dark:text-[#30d158]'
                   : blendedMargin >= 25
@@ -154,7 +154,7 @@ export const DiscountSummary = () => {
         {/* Live Deal Composition Bar (Cost Base vs Gross Margin) */}
         {grandTotal > 0 && (
           <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] space-y-1.5">
-            <div className="flex justify-between text-[11px] font-mono text-[#86868b]">
+            <div className="flex justify-between text-[11.5px] tabular-nums text-[#86868b]">
               <span>Cost: {formatCurrency(localCost)} ({costPercent}%)</span>
               <span className="text-[#1b7a36] dark:text-[#30d158] font-semibold">
                 Margin: {formatCurrency(marginDollar)} ({marginBarPercent}%)
@@ -181,11 +181,11 @@ export const DiscountSummary = () => {
             <div className="text-[15px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">
               Net Contract Value
             </div>
-            <div className="text-[11px] text-[#6e6e73] dark:text-[#86868b] font-mono mt-0.5">
+            <div className="text-[11px] text-[#6e6e73] dark:text-[#86868b] mt-0.5">
               Billed per agreement terms
             </div>
           </div>
-          <div className="text-[26px] font-bold font-mono text-[#0071e3] dark:text-[#2997ff] tracking-tight">
+          <div className="text-[25px] sm:text-[26px] font-bold tabular-nums text-[#0071e3] dark:text-[#2997ff] tracking-tight">
             {formatCurrency(grandTotal)}
           </div>
         </div>
