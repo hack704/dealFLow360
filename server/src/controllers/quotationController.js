@@ -31,6 +31,19 @@ const createQuotation = async (req, res, next) => {
     const quoteNumber = generateQuotationNumber();
     const initialStatus = status || (submitForApproval ? 'pending_approval' : 'draft');
 
+    let authorId = req.user ? req.user._id : null;
+    let submitterName = (req.user && req.user.name) || 'Sales Rep';
+    if (!authorId) {
+      const User = require('../models/User');
+      const defaultUser = (await User.findOne({ role: 'sales_rep' })) || (await User.findOne());
+      if (defaultUser) {
+        authorId = defaultUser._id;
+        submitterName = defaultUser.name;
+      } else {
+        authorId = new mongoose.Types.ObjectId();
+      }
+    }
+
     const quotation = await Quotation.create({
       quotationNumber: quoteNumber,
       title: title || `Quotation for ${calc.customer ? calc.customer.name : 'Customer'}`,
@@ -50,13 +63,13 @@ const createQuotation = async (req, res, next) => {
       paymentTermsDays: paymentTermsDays || 30,
       notes: notes || '',
       status: initialStatus,
-      createdBy: req.user ? req.user._id : null
+      createdBy: authorId
     });
 
     if (initialStatus === 'pending_approval') {
       try {
         const { createApprovalRequest } = require('../services/approval/approvalEngine');
-        await createApprovalRequest(quotation, req.user || { _id: quotation.createdBy, name: quotation.customerName || 'Sales Rep' });
+        await createApprovalRequest(quotation, { _id: authorId, name: submitterName });
       } catch (err) {
         console.warn('[QUOTATION] Auto approval request creation notice:', err.message);
       }
@@ -67,8 +80,8 @@ const createQuotation = async (req, res, next) => {
           quotation: quotation._id,
           quotationNumber: quotation.quotationNumber,
           customerName: quotation.customerName || 'Enterprise Account',
-          submittedBy: quotation.createdBy,
-          submitterName: (req.user && req.user.name) || 'Sales Rep',
+          submittedBy: authorId,
+          submitterName: submitterName,
           dealValue: quotation.grandTotal,
           blendedMarginPercent: quotation.blendedMarginPercent,
           maxDiscountPercent: quotation.totalDiscountPercent || 0,
