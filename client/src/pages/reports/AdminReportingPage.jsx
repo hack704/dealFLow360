@@ -202,21 +202,23 @@ export const AdminReportingPage = () => {
         </div>
 
         {/* Export Buttons */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
           <Button
             variant="secondary"
             size="md"
+            icon={FileText}
+            iconClassName="text-[#ff453a]"
             onClick={() => handleExport('PDF')}
           >
-            <FileText className="w-4 h-4 mr-2 text-[#ff453a]" />
             Export PDF
           </Button>
           <Button
             variant="secondary"
             size="md"
+            icon={FileSpreadsheet}
+            iconClassName="text-[#30d158]"
             onClick={() => handleExport('XLS')}
           >
-            <FileSpreadsheet className="w-4 h-4 mr-2 text-[#30d158]" />
             Export XLS
           </Button>
         </div>

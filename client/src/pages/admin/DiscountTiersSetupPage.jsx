@@ -138,10 +138,10 @@ export const DiscountTiersSetupPage = () => {
             type="button"
             variant="primary"
             size="md"
+            icon={Save}
             onClick={handleSaveConfig}
             className="shadow-sm shadow-blue-500/20"
           >
-            <Save className="w-4 h-4 mr-2" />
             Save configuration
           </Button>
         </div>
@@ -291,10 +291,10 @@ export const DiscountTiersSetupPage = () => {
           type="button"
           variant="primary"
           size="md"
+          icon={Save}
           onClick={handleSaveConfig}
           className="shadow-sm shadow-blue-500/20 px-6 py-2.5"
         >
-          <Save className="w-4 h-4 mr-2" />
           Save configuration
         </Button>
       </div>

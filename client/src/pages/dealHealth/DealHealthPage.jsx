@@ -175,21 +175,21 @@ export const DealHealthPage = () => {
         </div>
 
         {/* Global Action Buttons */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
           <Button
             variant="danger"
             size="md"
+            icon={ShieldAlert}
             onClick={handleEscalateAll}
           >
-            <ShieldAlert className="w-4 h-4 mr-2" />
             Escalate
           </Button>
           <Button
             variant="primary"
             size="md"
+            icon={Send}
             onClick={handleNudgeAll}
           >
-            <Send className="w-4 h-4 mr-2" />
             Nudge Rep
           </Button>
         </div>

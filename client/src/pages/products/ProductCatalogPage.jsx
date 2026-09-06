@@ -162,18 +162,19 @@ export const ProductCatalogPage = () => {
               <Button
                 variant="primary"
                 size="md"
+                icon={Plus}
                 onClick={() => navigate('/products/new')}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                + New Product
+                New Product
               </Button>
 
               <Button
                 variant="secondary"
                 size="md"
+                icon={SlidersHorizontal}
+                iconClassName="text-[#ff9f0a]"
                 onClick={() => navigate('/discount-tiers')}
               >
-                <SlidersHorizontal className="w-4 h-4 mr-2 text-[#ff9f0a]" />
                 Manage Price fields
               </Button>
             </>

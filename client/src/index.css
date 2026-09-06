@@ -327,3 +327,12 @@ html.light [class*="bg-\[\#ff9f0a\]"] {
   border: 1px solid var(--apple-border);
   border-radius: 16px;
 }
+
+/* Ensure button SVG icons always display inline with text, never breaking to new lines */
+button svg,
+button > span svg,
+.btn svg {
+  display: inline-block !important;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
