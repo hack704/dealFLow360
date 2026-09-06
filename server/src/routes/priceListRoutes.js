@@ -4,10 +4,10 @@ const {
   getPriceLists,
   createPriceList
 } = require('../controllers/priceListController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.route('/')
   .get(getPriceLists)
-  .post(protect, createPriceList);
+  .post(protect, authorize('admin'), createPriceList);
 
 module.exports = router;

@@ -6,7 +6,7 @@ import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { Calculator, Tag, Percent, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export const DiscountSummary = () => {
-  const { calculation, items, calculating } = useQuotation();
+  const { calculation, items, calculating, orderDiscountPercent, applyOrderDiscount } = useQuotation();
 
   const subtotal = calculation?.subtotal || items.reduce((acc, it) => acc + (it.listPrice || 0) * (it.quantity || 1), 0);
   const totalDiscount = calculation?.totalDiscountAmount || 0;
@@ -34,6 +34,43 @@ export const DiscountSummary = () => {
       </CardHeader>
 
       <div className="space-y-4 text-[13px]">
+        {/* Order-Level Discount Control */}
+        <div className="p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[12.5px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] flex items-center gap-1.5">
+              <Percent className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff]" />
+              Order-Level Concession (%)
+            </span>
+            <div className="flex items-center space-x-1.5">
+              <input
+                type="number"
+                min="0"
+                max="50"
+                value={orderDiscountPercent || 0}
+                onChange={(e) => applyOrderDiscount(e.target.value)}
+                className="w-16 h-7 text-right bg-white dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-2 text-[#1d1d1f] dark:text-white font-mono text-[12px] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff]"
+              />
+              <span className="text-[#86868b] font-mono text-[12px]">%</span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1">
+            {[0, 5, 10, 15, 20].map((pct) => (
+              <button
+                key={pct}
+                type="button"
+                onClick={() => applyOrderDiscount(pct)}
+                className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${
+                  orderDiscountPercent === pct
+                    ? 'bg-[#0071e3] text-white font-bold'
+                    : 'bg-black/[0.04] dark:bg-white/[0.06] text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white'
+                }`}
+              >
+                {pct}%
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex justify-between items-center text-[#6e6e73] dark:text-[#86868b]">
           <span>Gross Catalog Subtotal</span>
           <span className="font-mono text-[#1d1d1f] dark:text-[#f5f5f7] font-semibold text-[14px]">{formatCurrency(subtotal)}</span>

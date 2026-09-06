@@ -50,6 +50,21 @@ const dealHealthSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'done', 'escalated'],
       default: 'pending'
+    },
+    actionBy: {
+      type: String,
+      default: ''
+    },
+    actionRole: {
+      type: String,
+      default: ''
+    },
+    actionTimestamp: {
+      type: Date
+    },
+    actionNotes: {
+      type: String,
+      default: ''
     }
   },
   {

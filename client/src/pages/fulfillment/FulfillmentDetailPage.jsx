@@ -73,6 +73,28 @@ export const FulfillmentDetailPage = () => {
   const customerName = orderData?.customerName || 'Acme Corp';
   const displayId = orderData?.orderId || orderId;
 
+  const [isManualOverride, setIsManualOverride] = useState(false);
+  const [stockRestockDetected, setStockRestockDetected] = useState(true);
+  const [consolidated, setConsolidated] = useState(false);
+
+  const handleManualOverride = () => {
+    setIsManualOverride(!isManualOverride);
+  };
+
+  const handleConsolidateBackorder = () => {
+    setSplitRows([
+      { warehouse: 'Main Warehouse', qtyFulfilled: '24 units (Consolidated)', estShipments: 1, cost: 42 }
+    ]);
+    setConsolidated(true);
+    setStockRestockDetected(false);
+  };
+
+  const updateSplitQty = (index, newQty) => {
+    setSplitRows((prev) =>
+      prev.map((row, idx) => (idx === index ? { ...row, qtyFulfilled: `${newQty} units` } : row))
+    );
+  };
+
   return (
     <div className="space-y-8">
       {/* Screen 8 Header */}
@@ -92,13 +114,29 @@ export const FulfillmentDetailPage = () => {
             <Badge variant={confirmed ? 'success' : 'warning'} size="sm">
               {confirmed ? 'Dispatched' : 'Split Pending'}
             </Badge>
+            {consolidated && (
+              <span className="text-[12px] px-2.5 py-0.5 rounded-full bg-[#34c759]/15 text-[#1b7a36] dark:text-[#30d158] font-semibold border border-[#34c759]/30">
+                Backorder Consolidated (Single Shipment)
+              </span>
+            )}
           </div>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Review multi-depot stock allocation, confirm dispatch routing, and trigger order fulfillment
+            Recommended warehouse split for the order based on live stock and shipping cost weighting.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        {/* B6 Buttons: Accept Suggested Split & Manual Override */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            onClick={handleManualOverride}
+            variant="outline"
+            size="md"
+            icon={SlidersHorizontal}
+            title="Manually override warehouse allocation quantities"
+          >
+            {isManualOverride ? 'Done Overriding' : 'Manual Override'}
+          </Button>
+
           <Button
             onClick={handleConfirmSplit}
             disabled={confirmed}
@@ -138,20 +176,60 @@ export const FulfillmentDetailPage = () => {
         </div>
       )}
 
+      {/* B6 Requirement: If stock arrives mid fulfillment, a 'Consolidate Remaining Backorder' prompt appears automatically */}
+      {stockRestockDetected && !confirmed && (
+        <Card className="p-5 sm:p-6 rounded-[22px] bg-[#ff9f0a]/10 dark:bg-[#ff9f0a]/15 border-2 border-[#ff9f0a]/40 shadow-sm backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start space-x-3.5">
+              <div className="w-10 h-10 rounded-xl bg-[#ff9f0a] text-black flex items-center justify-center shrink-0 font-bold shadow-sm">
+                <Split className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-[15px] font-bold text-[#9e5200] dark:text-[#ff9f0a]">
+                  Stock Arrived Mid-Fulfillment: Consolidate Remaining Backorder?
+                </h4>
+                <p className="text-[13px] text-[#9e5200]/90 dark:text-[#ff9f0a]/90 mt-0.5 leading-relaxed">
+                  Depot replenishment inbound! Additional stock has arrived. You can consolidate remaining split shipments into 1 unified shipment, reducing freight cost from $71 to $42.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleConsolidateBackorder}
+              variant="primary"
+              size="md"
+              icon={CheckCircle2}
+              className="whitespace-nowrap shrink-0"
+            >
+              Consolidate Remaining Backorder
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {consolidated && (
+        <div className="p-4 rounded-xl bg-[#34c759]/15 border border-[#34c759]/30 text-[#1b7a36] dark:text-[#30d158] text-[13px] font-semibold flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>✓ Remaining backorders consolidated into 1 unified shipment at Main Warehouse! Freight cost reduced to $42.</span>
+        </div>
+      )}
+
       {/* Screen 8 Table */}
       <Card className="p-0 overflow-hidden rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] shadow-sm dark:shadow-apple-card backdrop-blur-xl">
         <div className="p-5 sm:p-6 pb-4 border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between">
           <CardTitle className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">Warehouse Allocation Split</CardTitle>
-          <span className="text-[13px] text-[#6e6e73] dark:text-[#86868b] font-mono px-3.5 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] whitespace-nowrap">Multi-Depot Routing</span>
+          <span className="text-[13px] text-[#6e6e73] dark:text-[#86868b] font-mono px-3.5 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] whitespace-nowrap">
+            {isManualOverride ? 'Manual Override Active' : 'Automated Cost Weighting'}
+          </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[13px] text-[#6e6e73] dark:text-apple-muted">
             <thead className="bg-black/[0.02] dark:bg-white/[0.03] text-[#6e6e73] dark:text-[#86868b] uppercase tracking-wider font-mono text-[13px] font-semibold border-b border-black/[0.08] dark:border-white/[0.08]">
               <tr>
-                <th className="py-3.5 px-5 whitespace-nowrap">Warehouse</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap">Qty Fulfilled</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap">Est. Shipments</th>
+                <th className="py-3.5 px-5 whitespace-nowrap">Warehouse Name</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap">Quantity Fulfilled</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap">Estimated Shipment Count</th>
                 <th className="py-3.5 px-5 text-right whitespace-nowrap">Cost</th>
               </tr>
             </thead>
@@ -159,7 +237,18 @@ export const FulfillmentDetailPage = () => {
               {splitRows.map((row, idx) => (
                 <tr key={idx} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
                   <td className="py-4 px-5 font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">{row.warehouse}</td>
-                  <td className="py-4 px-4 text-center font-mono text-[#0071e3] dark:text-[#2997ff] font-medium whitespace-nowrap">{row.qtyFulfilled}</td>
+                  <td className="py-4 px-4 text-center font-mono text-[#0071e3] dark:text-[#2997ff] font-medium whitespace-nowrap">
+                    {isManualOverride ? (
+                      <input
+                        type="text"
+                        value={row.qtyFulfilled}
+                        onChange={(e) => updateSplitQty(idx, e.target.value)}
+                        className="w-24 h-8 text-center bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-2 text-[#1d1d1f] dark:text-white font-mono text-[12px] focus:outline-none focus:border-[#0071e3]"
+                      />
+                    ) : (
+                      row.qtyFulfilled
+                    )}
+                  </td>
                   <td className="py-4 px-4 text-center font-mono text-[#1d1d1f] dark:text-white whitespace-nowrap">{row.estShipments}</td>
                   <td className="py-4 px-5 text-right font-mono font-semibold text-[#1b7a36] dark:text-[#30d158] whitespace-nowrap">
                     {formatCurrency(row.cost)}
@@ -173,7 +262,9 @@ export const FulfillmentDetailPage = () => {
         {/* Wireframe Exact Callout */}
         <div className="p-4 sm:p-5 bg-black/[0.02] dark:bg-white/[0.03] border-t border-black/[0.08] dark:border-white/[0.08] text-[13px] text-[#6e6e73] dark:text-[#86868b] flex items-center gap-3">
           <AlertCircle className="w-4.5 h-4.5 text-[#ff9f0a] shrink-0" />
-          <span>'Consolidate Remaining Backorder' prompt appears automatically once East Depot restocks.</span>
+          <span>
+            Single-shipment minimization engine prioritizes the lowest-cost depot combination and presents 'Consolidate Remaining Backorder' if restocked.
+          </span>
         </div>
       </Card>
     </div>

@@ -102,11 +102,48 @@ export const QuotationProvider = ({ children }) => {
     );
   };
 
+  const [orderDiscountPercent, setOrderDiscountPercent] = useState(0);
+
+  const applyOrderDiscount = (percent) => {
+    const p = Math.min(100, Math.max(0, parseFloat(percent) || 0));
+    setOrderDiscountPercent(p);
+    setItems((prev) =>
+      prev.map((it) => ({
+        ...it,
+        discountPercent: p
+      }))
+    );
+  };
+
+  const loadQuotation = (quote) => {
+    if (!quote) return;
+    if (quote.customer) setCustomer(quote.customer);
+    if (quote.title) setTitle(quote.title);
+    if (quote.notes) setNotes(quote.notes);
+    if (quote.paymentTermsDays) setPaymentTermsDays(quote.paymentTermsDays);
+    if (quote.items && quote.items.length > 0) {
+      setItems(
+        quote.items.map((it) => ({
+          product: it.product || { _id: it.productId, name: it.productName, basePrice: it.listPrice, unitCost: it.unitCost, category: it.category },
+          productId: it.productId || it.product?._id || it.product,
+          productName: it.productName || it.product?.name,
+          sku: it.sku || it.product?.sku || 'SKU-ITEM',
+          category: it.category || it.product?.category || 'Hardware',
+          listPrice: it.listPrice || it.product?.basePrice || 0,
+          unitCost: it.unitCost || it.product?.unitCost || 0,
+          quantity: it.quantity || 1,
+          discountPercent: it.discountPercent || 0
+        }))
+      );
+    }
+  };
+
   const resetBuilder = () => {
     setCustomer(null);
     setItems([]);
     setTitle('');
     setNotes('');
+    setOrderDiscountPercent(0);
     setCalculation(null);
   };
 
@@ -121,6 +158,10 @@ export const QuotationProvider = ({ children }) => {
         removeItem,
         updateItemQuantity,
         updateItemDiscount,
+        orderDiscountPercent,
+        setOrderDiscountPercent,
+        applyOrderDiscount,
+        loadQuotation,
         title,
         setTitle,
         notes,

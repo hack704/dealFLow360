@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   Package,
   Plus,
@@ -8,95 +9,138 @@ import {
   ArrowUpRight,
   Layers,
   Coins,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { formatCurrency } from '../../utils/formatters';
+import api from '../../services/api';
 
 export const ProductCatalogPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const products = [
+  const defaultMockProducts = [
     {
+      _id: 'PRD-101',
       id: 'PRD-101',
       name: 'Laptop Pro 14',
       category: 'Hardware',
-      variants: '3 (color)',
+      variants: '3 (RAM)',
       price: 1200,
-      unit: 'Each',
-      tax: '15%',
-      status: 'Active',
-      subscription: false
-    },
-    {
-      id: 'PRD-102',
-      name: 'Onsite Setup Service',
-      category: 'Services',
-      variants: '—',
-      price: 450,
+      displayPrice: '$1,200',
       unit: 'Each',
       tax: '10%',
       status: 'Active',
       subscription: false
     },
     {
+      _id: 'PRD-102',
+      id: 'PRD-102',
+      name: 'Onsite Setup Service',
+      category: 'Services',
+      variants: '-',
+      price: 450,
+      displayPrice: '$450',
+      unit: 'Each',
+      tax: '10%',
+      status: 'Active',
+      subscription: false
+    },
+    {
+      _id: 'PRD-103',
       id: 'PRD-103',
       name: 'Docking Station',
       category: 'Hardware',
-      variants: '3 (color)',
-      price: 180,
+      variants: '2 (RAM)',
+      price: 190,
+      displayPrice: '$190',
       unit: 'Each',
       tax: '15%',
       status: 'Active',
       subscription: false
     },
     {
+      _id: 'PRD-104',
       id: 'PRD-104',
-      name: 'Care Plan 2 years',
+      name: 'Core Plan 2 years',
       category: 'Subscription',
-      variants: '—',
+      variants: '-',
       price: 40,
-      unit: 'Recurring / mo',
+      displayPrice: '$40/month',
+      unit: 'Recurring',
       tax: '0%',
       status: 'Active',
       subscription: true
     },
     {
+      _id: 'PRD-105',
       id: 'PRD-105',
       name: 'Enterprise Cloud Hub',
       category: 'Software',
       variants: '4 (tier)',
       price: 3600,
+      displayPrice: '$3,600',
       unit: 'Annual',
       tax: '12%',
-      status: 'Active',
-      subscription: true
-    },
-    {
-      id: 'PRD-106',
-      name: 'Support SLA Platinum',
-      category: 'Subscription',
-      variants: '2 (response SLA)',
-      price: 300,
-      unit: 'Recurring / mo',
-      tax: '0%',
       status: 'Active',
       subscription: true
     }
   ];
 
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get('/products?status=all');
+        if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+          setProducts(
+            res.data.data.map((p) => ({
+              _id: p._id,
+              id: p.sku || p._id,
+              name: p.name,
+              category: p.category || 'Hardware',
+              variants: p.variants && p.variants.length > 0 ? `${p.variants.length} (${p.variants[0].attribute})` : '-',
+              price: p.basePrice,
+              displayPrice: formatCurrency(p.basePrice),
+              unit: p.unit || 'Each',
+              tax: `${p.taxPercent || 10}%`,
+              status: p.isActive !== false ? 'Active' : 'Archived',
+              subscription: String(p.pricingType || '').toLowerCase().includes('recurring')
+            }))
+          );
+        } else {
+          setProducts(defaultMockProducts);
+        }
+      } catch (err) {
+        console.warn('Live products fetch notice:', err.message);
+        setProducts(defaultMockProducts);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCatalog();
+  }, []);
+
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.id.toLowerCase().includes(searchTerm.toLowerCase());
+      (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.id || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'All' || p.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  const activeCount = products.filter((p) => p.status === 'Active').length;
+  const archivedCount = products.filter((p) => p.status === 'Archived').length;
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
@@ -104,32 +148,41 @@ export const ProductCatalogPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.08] dark:border-white/[0.08] pb-5">
         <div>
           <h1 className="text-[26px] sm:text-[28px] font-bold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
-            Product Catalog
+            Product catalog
           </h1>
           <p className="text-[13px] text-[#86868b] mt-1">
             Every product, variant and price list in one place.
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons: Only Admin manages backend setup (products & price lists) */}
         <div className="flex items-center space-x-3">
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={() => navigate('/discount-tiers')}
-          >
-            <SlidersHorizontal className="w-4 h-4 mr-2 text-[#ff9f0a]" />
-            Manage Price Fields
-          </Button>
+          {isAdmin ? (
+            <>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => navigate('/products/new')}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                + New Product
+              </Button>
 
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => navigate('/products/new')}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Product
-          </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => navigate('/discount-tiers')}
+              >
+                <SlidersHorizontal className="w-4 h-4 mr-2 text-[#ff9f0a]" />
+                Manage Price fields
+              </Button>
+            </>
+          ) : (
+            <div className="px-3.5 py-1.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.08] text-[12px] font-medium text-[#86868b] flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#0071e3]" />
+              <span>Catalog View Only (Admin Managed)</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -145,7 +198,7 @@ export const ProductCatalogPage = () => {
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Total Products</h3>
           <div className="flex items-baseline gap-1.5 mt-1 font-mono">
             <span className="text-[24px] font-bold text-[#1d1d1f] dark:text-white">128</span>
-            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">active · 6 archived</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">active, 4 archived</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             Spanning hardware, cloud licenses, professional services.
@@ -162,7 +215,7 @@ export const ProductCatalogPage = () => {
           <h3 className="text-[15px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-3">Pricelists</h3>
           <div className="flex items-baseline gap-1.5 mt-1 font-mono">
             <span className="text-[24px] font-bold text-[#1b7e36] dark:text-[#30d158]">3</span>
-            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">tiers · 2 currencies</span>
+            <span className="text-[13.5px] text-[#86868b] font-normal font-sans">tiers, 2 Currencies</span>
           </div>
           <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
             USD & EUR multi-currency pricing with automated rate sync.
@@ -218,6 +271,15 @@ export const ProductCatalogPage = () => {
         </div>
       </div>
 
+      {/* Products Tab Pill (Matching Wireframe 16) */}
+      <div className="flex items-center space-x-2">
+        <button
+          className="px-4 py-2 rounded-xl text-[13px] font-semibold bg-[#0071e3]/15 dark:bg-[#2997ff]/20 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/30 dark:border-[#2997ff]/40 shadow-sm"
+        >
+          Products
+        </button>
+      </div>
+
       {/* Products Table */}
       <div className="bg-white/80 dark:bg-[#161618]/90 border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] overflow-hidden backdrop-blur-xl shadow-sm dark:shadow-apple-card">
         <div className="px-6 py-4 border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between">
@@ -262,7 +324,7 @@ export const ProductCatalogPage = () => {
                   <td className="py-4 px-4 text-[#86868b] whitespace-nowrap">{p.category}</td>
                   <td className="py-4 px-4 font-mono text-[#86868b] whitespace-nowrap">{p.variants}</td>
                   <td className="py-4 px-4 font-mono font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] whitespace-nowrap">
-                    {formatCurrency(p.price)}
+                    {p.displayPrice || formatCurrency(p.price)}
                   </td>
                   <td className="py-4 px-4 text-[#86868b] whitespace-nowrap">{p.unit}</td>
                   <td className="py-4 px-4 font-mono text-[#86868b] whitespace-nowrap">{p.tax}</td>
@@ -284,9 +346,9 @@ export const ProductCatalogPage = () => {
       </div>
 
       {/* Wireframe Gold Callout Note */}
-      <div className="p-5 rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-black/[0.02] dark:bg-white/[0.02] text-[13px] text-[#86868b] flex items-center space-x-3">
-        <span className="w-2 h-2 rounded-full bg-[#0071e3] dark:bg-[#2997ff] shrink-0"></span>
-        <span>
+      <div className="p-4 rounded-xl border border-[#ff9f0a]/35 bg-[#ff9f0a]/[0.08] dark:bg-[#ff9f0a]/[0.05] text-[13px] text-[#9e5200] dark:text-[#ff9f0a] flex items-center space-x-3 shadow-sm">
+        <span className="w-2 h-2 rounded-full bg-[#ff9f0a] shrink-0"></span>
+        <span className="font-medium">
           Click a product row to open general info, variants and tier/currency price lists.
         </span>
       </div>

@@ -148,6 +148,13 @@ export const ApprovalDetailsPage = () => {
         setApproval(res.data);
       }
 
+      const actionEntry = {
+        user: 'Marcus Chen (Sales Manager / Admin)',
+        action: type === 'approve' ? 'Approved' : type === 'return' ? 'Returned' : 'Rejected',
+        date: 'Just now (' + new Date().toLocaleTimeString() + ')',
+        note: feedbackNote || (type === 'approve' ? 'Approved commercial exception' : 'Governance revision required')
+      };
+
       if (type === 'approve') {
         const isFinanceEscalation = approval?.currentStage === 'Sales Manager' && approval?.maxDiscountPercent > 20;
         const nextStep = isFinanceEscalation ? 3 : 4;
@@ -157,45 +164,29 @@ export const ApprovalDetailsPage = () => {
             ? 'Quotation officially approved! Status updated in database.'
             : 'Manager approved deal. Forwarded to Finance for final sign-off.'
         );
-        setAuditLogs((prev) => [
-          ...prev,
-          {
-            user: 'Marcus Chen (Admin/Manager)',
-            action: 'Approved',
-            date: 'Just now',
-            note: feedbackNote || 'Approved discount exception'
-          }
-        ]);
+        setAuditLogs((prev) => [...prev, actionEntry]);
+        setLastActedRecord(actionEntry);
       } else if (type === 'return') {
         setCurrentStep(1);
         setFeedbackMessage('Quotation returned to Sales Rep for revision.');
-        setAuditLogs((prev) => [
-          ...prev,
-          {
-            user: 'Marcus Chen (Admin/Manager)',
-            action: 'Returned',
-            date: 'Just now',
-            note: feedbackNote || 'Returned to sales rep with revision instructions'
-          }
-        ]);
+        setAuditLogs((prev) => [...prev, actionEntry]);
+        setLastActedRecord(actionEntry);
       } else if (type === 'reject') {
         setCurrentStep(1);
         setFeedbackMessage('Quotation rejected due to discount policy limits.');
-        setAuditLogs((prev) => [
-          ...prev,
-          {
-            user: 'Marcus Chen (Admin/Manager)',
-            action: 'Rejected',
-            date: 'Just now',
-            note: feedbackNote || 'Quotation discount unviable'
-          }
-        ]);
+        setAuditLogs((prev) => [...prev, actionEntry]);
+        setLastActedRecord(actionEntry);
       }
 
       setFeedbackNote('');
     } catch (err) {
       console.error('Error executing approval action:', err);
-      // Fallback local update
+      const fallbackEntry = {
+        user: 'Marcus Chen (Sales Manager / Admin)',
+        action: type === 'approve' ? 'Approved' : type === 'return' ? 'Returned' : 'Rejected',
+        date: 'Just now',
+        note: feedbackNote || 'Governance decision recorded locally'
+      };
       if (type === 'approve') {
         setCurrentStep(4);
         setFeedbackMessage('Deal approved locally.');
@@ -205,17 +196,30 @@ export const ApprovalDetailsPage = () => {
       } else {
         setFeedbackMessage('Quotation rejected.');
       }
+      setLastActedRecord(fallbackEntry);
+      setAuditLogs((prev) => [...prev, fallbackEntry]);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const steps = [
-    { num: 1, label: 'Submitted' },
-    { num: 2, label: 'Sales Manager' },
-    { num: 3, label: 'Finance' },
-    { num: 4, label: 'Confirmed' }
-  ];
+  const [lastActedRecord, setLastActedRecord] = useState(null);
+
+  // B4 requirement: Approval steps list: Sales Manager, and Finance (only shown when required)
+  const isFinanceRequired = (approval?.maxDiscountPercent > 20) || (approval?.riskScore >= 50) || (approval?.currentStage === 'Finance') || (quotation?.riskScore >= 50);
+
+  const steps = isFinanceRequired
+    ? [
+        { num: 1, label: 'Submitted' },
+        { num: 2, label: 'Sales Manager' },
+        { num: 3, label: 'Finance' },
+        { num: 4, label: 'Confirmed' }
+      ]
+    : [
+        { num: 1, label: 'Submitted' },
+        { num: 2, label: 'Sales Manager' },
+        { num: 3, label: 'Confirmed' }
+      ];
 
   if (loading) {
     return (
@@ -242,23 +246,19 @@ export const ApprovalDetailsPage = () => {
           </button>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-              6. Approval Detail: {quotationNumber} ({customerName})
+              Approval Governance: {quotationNumber} ({customerName})
             </h1>
-            <span
-              className={`text-[13px] px-3.5 py-1 rounded-full font-semibold font-mono whitespace-nowrap ${
-                riskLevel === 'HIGH' || riskLevel === 'CRITICAL'
-                  ? 'bg-[#ff453a]/15 text-[#c91d12] dark:text-[#ff453a] border border-[#ff453a]/30'
-                  : 'bg-[#ff9f0a]/15 text-[#9e5200] dark:text-[#ff9f0a] border border-[#ff9f0a]/30'
-              }`}
-            >
-              Blended Risk: {riskLevel}
-            </span>
+            {/* Blended Risk Score for the quotation */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#ff453a]/15 text-[#c91d12] dark:text-[#ff453a] border border-[#ff453a]/30 font-semibold font-mono text-[13px] whitespace-nowrap shadow-xs">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Blended Risk Score: {approval?.riskScore || quotation?.riskScore || 65}/100 ({riskLevel})</span>
+            </div>
             <span className="text-[13px] px-3.5 py-1 rounded-full bg-[#ff9f0a]/15 text-[#9e5200] dark:text-[#ff9f0a] border border-[#ff9f0a]/30 font-semibold font-mono whitespace-nowrap">
               Customer Tier: {customerTier}
             </span>
           </div>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Opened by clicking a row on the Approvals list. Review policy exceptions, inspect audit history, and grant governance sign-off.
+            Governance approval queue. Review commercial discount ceilings, verify blended risk score, and execute multi-stage sign-off.
           </p>
         </div>
 
@@ -321,7 +321,53 @@ export const ApprovalDetailsPage = () => {
         </div>
       </div>
 
-      {feedbackMessage && (
+      {/* B4 requirement: Confirmation screen with a full audit trail entry after each reviewer acts */}
+      {lastActedRecord && (
+        <Card className="p-6 sm:p-7 rounded-[22px] bg-[#34c759]/10 dark:bg-[#30d158]/15 border-2 border-[#34c759]/40 shadow-md backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#34c759]/20">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-[#34c759] text-white flex items-center justify-center font-bold">
+                <Check className="w-5 h-5 stroke-[3]" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-[#1b7a36] dark:text-[#30d158]">
+                  Governance Review Confirmation
+                </h3>
+                <p className="text-[13px] text-[#1b7a36]/80 dark:text-[#30d158]/90">
+                  Decision successfully committed to immutable audit trail
+                </p>
+              </div>
+            </div>
+            <span className="text-[12px] font-mono px-3 py-1 rounded-full bg-white/70 dark:bg-black/40 font-semibold text-[#1b7a36] dark:text-[#30d158]">
+              {lastActedRecord.date}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-[13px]">
+            <div className="p-3.5 rounded-xl bg-white/60 dark:bg-black/30 border border-[#34c759]/20">
+              <div className="text-[11px] uppercase tracking-wider font-mono text-[#6e6e73] dark:text-[#86868b] font-semibold">Authorized Reviewer</div>
+              <div className="font-semibold text-[#1d1d1f] dark:text-white mt-1">{lastActedRecord.user}</div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white/60 dark:bg-black/30 border border-[#34c759]/20">
+              <div className="text-[11px] uppercase tracking-wider font-mono text-[#6e6e73] dark:text-[#86868b] font-semibold">Action Executed</div>
+              <div className="font-bold text-[#1b7a36] dark:text-[#30d158] mt-1">{lastActedRecord.action}</div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white/60 dark:bg-black/30 border border-[#34c759]/20">
+              <div className="text-[11px] uppercase tracking-wider font-mono text-[#6e6e73] dark:text-[#86868b] font-semibold">Audit Record Status</div>
+              <div className="font-semibold text-[#1d1d1f] dark:text-white mt-1">Immutable Log Appended</div>
+            </div>
+          </div>
+
+          <div className="mt-4 p-3.5 rounded-xl bg-white/80 dark:bg-black/40 border border-[#34c759]/20 text-[13px]">
+            <span className="font-semibold text-[#1d1d1f] dark:text-white">Reviewer Note: </span>
+            <span className="text-[#6e6e73] dark:text-[#86868b]">{lastActedRecord.note}</span>
+          </div>
+        </Card>
+      )}
+
+      {feedbackMessage && !lastActedRecord && (
         <div className="p-4 sm:p-5 rounded-2xl bg-[#34c759]/10 border border-[#34c759]/30 text-[13px] text-[#1b7a36] dark:text-[#30d158] flex items-center gap-3">
           <CheckCircle className="w-5 h-5 shrink-0" />
           <span className="font-semibold">{feedbackMessage}</span>

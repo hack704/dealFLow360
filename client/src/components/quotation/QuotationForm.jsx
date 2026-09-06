@@ -71,6 +71,14 @@ export const QuotationForm = () => {
     }
   };
 
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const categories = ['All', 'Hardware', 'Services', 'Subscription'];
+
+  const filteredCatalog = activeCategory === 'All'
+    ? catalog
+    : catalog.filter((p) => p.category?.toLowerCase() === activeCategory.toLowerCase() || (activeCategory === 'Subscription' && (p.category === 'Software' || p.category === 'Subscription')));
+
   return (
     <Card className="mb-8 p-6 sm:p-7 rounded-[22px] bg-white/80 dark:bg-[#161618]/80 border border-black/[0.08] dark:border-white/[0.08] backdrop-blur-xl shadow-sm dark:shadow-apple-card">
       <CardHeader className="pb-4 border-b border-black/[0.08] dark:border-white/[0.08] mb-6">
@@ -130,36 +138,66 @@ export const QuotationForm = () => {
         </div>
       </div>
 
-      {/* Quick Add Product from Catalog Bar */}
-      <div className="pt-5 border-t border-black/[0.08] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="w-full sm:w-2/3 flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-black/[0.04] dark:bg-white/[0.06] text-[#6e6e73] dark:text-[#86868b] shrink-0">
-            <Package className="w-4 h-4" />
-          </div>
-          <select
-            value={selectedProductId}
-            onChange={(e) => setSelectedProductId(e.target.value)}
-            className="w-full h-11 bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-xl px-3.5 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff] transition-all"
-          >
-            <option value="" className="bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#f5f5f7]">Select a product or service from catalog...</option>
-            {catalog.map((p) => (
-              <option key={p._id} value={p._id} className="bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#f5f5f7]">
-                {p.name} — {formatCurrency(p.basePrice)} ({p.category})
-              </option>
+      {/* Pick products across categories (Hardware, Services, Subscriptions) */}
+      <div className="pt-5 border-t border-black/[0.08] dark:border-white/[0.08] space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <label className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+            Pick Products Across Categories
+          </label>
+          {/* Category Filter Tabs */}
+          <div className="flex items-center space-x-1 p-1 bg-black/[0.03] dark:bg-white/[0.04] rounded-xl border border-black/[0.06] dark:border-white/[0.08] self-start sm:self-auto">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setSelectedProductId('');
+                }}
+                className={`px-3 py-1 rounded-lg text-[12px] font-medium transition-all ${
+                  activeCategory === cat
+                    ? 'bg-white dark:bg-[#2c2c2e] text-[#0071e3] dark:text-[#2997ff] shadow-xs font-semibold'
+                    : 'text-[#6e6e73] dark:text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white'
+                }`}
+              >
+                {cat}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
-        <Button
-          onClick={handleAddProduct}
-          disabled={!selectedProductId}
-          variant="primary"
-          size="md"
-          icon={Plus}
-          className="w-full sm:w-auto"
-        >
-          Add to Quote Configuration
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="w-full sm:w-2/3 flex items-center space-x-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-black/[0.04] dark:bg-white/[0.06] text-[#6e6e73] dark:text-[#86868b] shrink-0">
+              <Package className="w-4 h-4" />
+            </div>
+            <select
+              value={selectedProductId}
+              onChange={(e) => setSelectedProductId(e.target.value)}
+              className="w-full h-11 bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-xl px-3.5 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff] transition-all"
+            >
+              <option value="" className="bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#f5f5f7]">
+                Select a {activeCategory !== 'All' ? activeCategory : 'catalog'} item...
+              </option>
+              {filteredCatalog.map((p) => (
+                <option key={p._id} value={p._id} className="bg-white dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#f5f5f7]">
+                  {p.name} — {formatCurrency(p.basePrice)} [{p.category}]
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Button
+            onClick={handleAddProduct}
+            disabled={!selectedProductId}
+            variant="primary"
+            size="md"
+            icon={Plus}
+            className="w-full sm:w-auto"
+          >
+            Add to Quote
+          </Button>
+        </div>
       </div>
     </Card>
   );

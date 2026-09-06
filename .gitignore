@@ -30,3 +30,6 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Test reports
+playwright_reports/

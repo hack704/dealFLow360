@@ -20,6 +20,7 @@ import AdminReportingPage from '../pages/reports/AdminReportingPage';
 import ProductCatalogPage from '../pages/products/ProductCatalogPage';
 import ProductDetailsPage from '../pages/products/ProductDetailsPage';
 import DiscountTiersSetupPage from '../pages/admin/DiscountTiersSetupPage';
+import SalesBackendConfigurationPage from '../pages/admin/SalesBackendConfigurationPage';
 import CustomerPortalPage from '../pages/customer/CustomerPortalPage';
 
 export const AppRoutes = () => {
@@ -54,43 +55,225 @@ export const AppRoutes = () => {
         {/* Screen 2: Dashboard */}
         <Route path="dashboard" element={<DashboardPage />} />
 
-        {/* Screen 3 & 4: Quotations */}
-        <Route path="quotations" element={<QuotationsListPage />} />
-        <Route path="quotations/new" element={<QuotationBuilderPage />} />
-        <Route path="quotations/:id" element={<QuotationDetailsPage />} />
+        {/* Screen 3 & 4: Quotations & Kanban Deal Pipeline (Sales Rep, Sales Manager, Admin) */}
+        <Route
+          path="quotations"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <QuotationsListPage initialView="table" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="pipeline"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <QuotationsListPage initialView="kanban" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="quotations/new"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <QuotationBuilderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="quotations/builder"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <QuotationBuilderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="quotations/builder/:id"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <QuotationBuilderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="quotations/:id"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <QuotationDetailsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 5 & 6: Approvals */}
-        <Route path="approvals" element={<ApprovalsQueuePage />} />
-        <Route path="approvals/:id" element={<ApprovalDetailsPage />} />
+        {/* Screen 5 & 6: Approvals (Sales Manager, Finance, Admin - BLOCKED for Sales Rep) */}
+        <Route
+          path="approvals"
+          element={
+            <ProtectedRoute allowedRoles={['sales_manager', 'finance', 'admin']}>
+              <ApprovalsQueuePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="approvals/:id"
+          element={
+            <ProtectedRoute allowedRoles={['sales_manager', 'finance', 'admin']}>
+              <ApprovalDetailsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 7 & 8: Fulfillment */}
-        <Route path="fulfillment" element={<FulfillmentPage />} />
-        <Route path="fulfillment/:id" element={<FulfillmentDetailPage />} />
+        {/* Screen 7 & 8: Fulfillment (Finance, Admin, Sales Manager) */}
+        <Route
+          path="fulfillment"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin', 'sales_manager']}>
+              <FulfillmentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="fulfillment/:id"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin', 'sales_manager']}>
+              <FulfillmentDetailPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 9 & 10: Subscriptions & Billing Detail */}
-        <Route path="subscriptions" element={<SubscriptionsPage />} />
-        <Route path="subscriptions/:id" element={<BillingDetailPage />} />
-        <Route path="billing/:id" element={<BillingDetailPage />} />
+        {/* Screen 9 & 10: Subscriptions (Finance, Admin) */}
+        <Route
+          path="subscriptions"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin']}>
+              <SubscriptionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="subscriptions/:id"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin']}>
+              <BillingDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="billing/:id"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin']}>
+              <BillingDetailPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 12 & 13: Invoices */}
-        <Route path="invoices" element={<InvoicesPage />} />
-        <Route path="invoices/:id" element={<InvoiceDetailsPage />} />
-        <Route path="billing" element={<InvoicesPage />} />
+        {/* Screen 12 & 13: Invoices (Finance, Admin) */}
+        <Route
+          path="invoices"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin']}>
+              <InvoicesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="invoices/:id"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin']}>
+              <InvoiceDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="billing"
+          element={
+            <ProtectedRoute allowedRoles={['finance', 'admin']}>
+              <InvoicesPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 14: Deal Health */}
-        <Route path="deal-health" element={<DealHealthPage />} />
+        {/* Screen 14: Deal Health (Sales Manager, Admin) */}
+        <Route
+          path="deal-health"
+          element={
+            <ProtectedRoute allowedRoles={['sales_manager', 'admin']}>
+              <DealHealthPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 15: Admin Reporting */}
-        <Route path="reports" element={<AdminReportingPage />} />
+        {/* Screen 15: Admin Reporting (Admin Only) */}
+        <Route
+          path="reports"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminReportingPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 16 & 17: Product Catalog & Product Details */}
-        <Route path="products" element={<ProductCatalogPage />} />
-        <Route path="products/new" element={<ProductDetailsPage />} />
-        <Route path="products/:id" element={<ProductDetailsPage />} />
+        {/* Screen 16 & 17: Product Catalog (Admin, Sales Rep, Sales Manager) */}
+        <Route
+          path="products"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'sales_rep', 'sales_manager']}>
+              <ProductCatalogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="products/new"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ProductDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="products/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'sales_rep', 'sales_manager']}>
+              <ProductDetailsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Screen 18: Discount Tiers & Approval Chains */}
-        <Route path="discount-tiers" element={<DiscountTiersSetupPage />} />
-        <Route path="admin/discount-chains" element={<DiscountTiersSetupPage />} />
+        {/* Screen 18: Discount Tiers & Approval Chains (Sales Manager, Admin) */}
+        <Route
+          path="discount-tiers"
+          element={
+            <ProtectedRoute allowedRoles={['sales_manager', 'admin']}>
+              <DiscountTiersSetupPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/discount-chains"
+          element={
+            <ProtectedRoute allowedRoles={['sales_manager', 'admin']}>
+              <DiscountTiersSetupPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Section A: Sales Backend (Configuration Area Hub: A1 through A7) */}
+        <Route
+          path="backend-config"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <SalesBackendConfigurationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/setup"
+          element={
+            <ProtectedRoute allowedRoles={['sales_rep', 'sales_manager', 'admin']}>
+              <SalesBackendConfigurationPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -4,9 +4,9 @@ const {
   getDiscountRules,
   updateDiscountCeilings
 } = require('../controllers/discountController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.get('/rules', getDiscountRules);
-router.put('/ceilings', protect, updateDiscountCeilings);
+router.put('/ceilings', protect, authorize('admin', 'sales_manager'), updateDiscountCeilings);
 
 module.exports = router;

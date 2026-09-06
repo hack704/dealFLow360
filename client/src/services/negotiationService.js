@@ -14,6 +14,11 @@ export const negotiationService = {
   addComment: async (negotiationId, commentData) => {
     const res = await api.post(`/negotiations/${negotiationId}/comments`, commentData);
     return res.data;
+  },
+
+  respondToNegotiation: async (quoteId, data) => {
+    const res = await api.post(`/negotiations/${quoteId}/respond`, data);
+    return res.data;
   }
 };
 

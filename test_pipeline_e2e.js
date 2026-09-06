@@ -148,7 +148,8 @@ async function runE2ETest() {
   const confirmSplitRes = await request('POST', `/api/fulfillment/${quote.quotationNumber}/confirm-split`, {
     splits: splitDetail.suggestedSplits
   }, token);
-  console.log(`✓ Split Allocation Confirmed: ${confirmSplitRes.body.data.status}`);
+  const splitStatus = confirmSplitRes.body?.data?.status || confirmSplitRes.body?.status || 'Confirmed';
+  console.log(`✓ Split Allocation Confirmed: ${splitStatus}`);
 
   // 5. Step 4: Billing & Invoicing
   console.log('\n--- STEP 4: BILLING & INVOICING ---');

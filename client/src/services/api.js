@@ -20,29 +20,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for auth expiration & auto-recovery
+// Response interceptor for auth expiration
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && originalRequest && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        // Transparent re-authentication with demo credentials
-        const loginRes = await axios.post(`${API_BASE_URL}/auth/login`, {
-          email: 'admin@dealflow360.com',
-          password: 'password123'
-        });
-        if (loginRes.data && loginRes.data.data && loginRes.data.data.token) {
-          const newToken = loginRes.data.data.token;
-          localStorage.setItem('dealflow_token', newToken);
-          localStorage.setItem('dealflow_user', JSON.stringify(loginRes.data.data));
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        }
-      } catch (reAuthErr) {
-        console.warn('[API] Auto re-auth failed:', reAuthErr.message);
-      }
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token expired or invalid: clear expired credentials
+      localStorage.removeItem('dealflow_token');
+      localStorage.removeItem('dealflow_user');
     }
     return Promise.reject(error);
   }

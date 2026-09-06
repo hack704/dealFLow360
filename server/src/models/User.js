@@ -31,10 +31,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'Sales'
     },
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Customer'
+    },
     isActive: {
       type: Boolean,
       default: true
-    }
+    },
+    roleAuditTrail: [
+      {
+        previousRole: String,
+        newRole: String,
+        changedBy: String,
+        changedByRole: String,
+        reason: String,
+        timestamp: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ]
   },
   {
     timestamps: true

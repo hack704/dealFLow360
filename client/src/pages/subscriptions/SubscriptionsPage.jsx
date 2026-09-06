@@ -172,23 +172,41 @@ export const SubscriptionsPage = () => {
   // Toggle Pause/Resume
   const handleTogglePause = async (sub, e) => {
     e.stopPropagation();
-    const nextStatus = sub.status === 'Paused' ? 'Active' : 'Paused';
+    const isCurrentlyPaused = sub.status === 'Paused';
     try {
-      await billingService.updateSubscription(sub.id, { status: nextStatus });
+      if (isCurrentlyPaused) {
+        const res = await billingService.resumeSubscription(sub.id);
+        const newBill = res?.data?.newNextBill ? formatDate(res.data.newNextBill) : 'Sep 15';
+        setSubscriptions((prev) =>
+          prev.map((s) => (s.id === sub.id ? { ...s, status: 'Active', nextBill: newBill } : s))
+        );
+        setFeedbackType('success');
+        setFeedbackMessage(
+          `Subscription for ${sub.customer} resumed! Next billing date extended by ${res?.data?.pausedDays || 1} day(s).`
+        );
+      } else {
+        await billingService.pauseSubscription(sub.id, 'Customer requested temporary hold');
+        setSubscriptions((prev) =>
+          prev.map((s) => (s.id === sub.id ? { ...s, status: 'Paused', nextBill: '-' } : s))
+        );
+        setFeedbackType('info');
+        setFeedbackMessage(
+          `Subscription for ${sub.customer} paused. Automated recurring invoices halted.`
+        );
+      }
     } catch (err) {
       console.warn('Backend toggle fallback:', err.message);
+      const nextStatus = isCurrentlyPaused ? 'Active' : 'Paused';
+      setSubscriptions((prev) =>
+        prev.map((s) =>
+          s.id === sub.id
+            ? { ...s, status: nextStatus, nextBill: nextStatus === 'Active' ? 'Sep 15' : '-' }
+            : s
+        )
+      );
+      setFeedbackType('info');
+      setFeedbackMessage(`Subscription for ${sub.customer} switched to ${nextStatus}.`);
     }
-
-    setSubscriptions((prev) =>
-      prev.map((s) =>
-        s.id === sub.id
-          ? { ...s, status: nextStatus, nextBill: nextStatus === 'Active' ? 'Sep 15' : '-' }
-          : s
-      )
-    );
-
-    setFeedbackType('info');
-    setFeedbackMessage(`Subscription for ${sub.customer} switched to ${nextStatus}.`);
   };
 
   // Open Remove Modal

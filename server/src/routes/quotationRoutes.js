@@ -6,11 +6,14 @@ const {
   getQuotations,
   getQuotationById,
   updateQuotation,
-  updateQuotationStatus
+  updateQuotationStatus,
+  getActivityFeed
 } = require('../controllers/quotationController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.post('/preview', previewCalculation);
+
+router.get('/activity-feed', getActivityFeed);
 
 router.route('/')
   .get(getQuotations)

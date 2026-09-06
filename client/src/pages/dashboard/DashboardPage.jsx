@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import quotationService from '../../services/quotationService';
+import dealHealthService from '../../services/dealHealthService';
 import Card, { CardHeader, CardTitle } from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -24,8 +25,10 @@ import {
   CreditCard,
   Building2,
   ChevronRight,
+  ChevronLeft,
   ExternalLink,
-  Flame
+  Flame,
+  RefreshCw
 } from 'lucide-react';
 import { formatCurrency, formatPercent, formatDate } from '../../utils/formatters';
 
@@ -33,6 +36,39 @@ export const DashboardPage = () => {
   const navigate = useNavigate();
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+  const [healthAlerts, setHealthAlerts] = useState([]);
+  const [loadingHealth, setLoadingHealth] = useState(true);
+  const [activeAlertIndex, setActiveAlertIndex] = useState(0);
+
+  const fetchActivities = async () => {
+    try {
+      setLoadingActivities(true);
+      const res = await quotationService.getActivityFeed();
+      if (res?.data && Array.isArray(res.data)) {
+        setActivities(res.data);
+      }
+    } catch (err) {
+      console.warn('Dynamic activity feed fallback:', err.message);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  const fetchHealthAlerts = async () => {
+    try {
+      setLoadingHealth(true);
+      const res = await dealHealthService.getDealHealthList();
+      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        setHealthAlerts(res.data);
+      }
+    } catch (err) {
+      console.warn('Deal health dynamic fetch notice:', err.message);
+    } finally {
+      setLoadingHealth(false);
+    }
+  };
 
   useEffect(() => {
     const fetchQuotes = async () => {
@@ -105,27 +141,75 @@ export const DashboardPage = () => {
         setLoading(false);
       }
     };
+
     fetchQuotes();
+    fetchActivities();
+    fetchHealthAlerts();
+
+    // Live polling interval every 20 seconds to keep feed & alerts dynamic
+    const interval = setInterval(() => {
+      fetchActivities();
+      fetchHealthAlerts();
+    }, 20000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  const getRelativeTime = (timestamp) => {
+    if (!timestamp) return 'Just now';
+    const diffMs = Date.now() - new Date(timestamp).getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHr / 24);
+
+    if (diffSec < 45) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHr < 24) return `${diffHr}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    return `${diffDays}d ago`;
+  };
 
   // Aggregated Pipeline Calculations
   const totalPipelineValue = quotations.reduce((acc, q) => acc + (Number(q.grandTotal) || 0), 0) || 520700;
-  const pendingApprovalsCount = quotations.filter((q) => q.status === 'pending_approval' || q.requiresApproval).length || 2;
+  const pendingApprovalsCount = quotations.filter((q) => q.status === 'pending_approval' || q.requiresApproval).length;
   const openQuotesCount = quotations.filter((q) => q.status !== 'accepted' && q.status !== 'rejected').length || quotations.length;
-  const atRiskCount = quotations.filter((q) => (q.riskScore && q.riskScore >= 50) || q.riskLevel === 'high' || q.riskLevel === 'critical').length || 2;
+  const atRiskCount = quotations.filter((q) => (q.riskScore && q.riskScore >= 50) || q.riskLevel === 'high' || q.riskLevel === 'critical').length;
   
   const avgMargin = quotations.length > 0
     ? (quotations.reduce((acc, q) => acc + (Number(q.blendedMarginPercent) || 0), 0) / quotations.length)
     : 35.6;
 
-  // Pipeline stage distribution counts
+  // Pipeline stage distribution counts - fully dynamic from loaded quotes
+  const draftCount = quotations.filter((q) => q.status === 'draft').length;
+  const pendingCount = quotations.filter((q) => q.status === 'pending_approval' || q.requiresApproval).length;
+  const sentCount = quotations.filter((q) => q.status === 'sent_to_customer' || q.status === 'confirmed').length;
+  const acceptedCount = quotations.filter((q) => q.status === 'approved' || q.status === 'accepted').length;
+
   const stageDistribution = {
-    draft: 2,
-    pending_approval: pendingApprovalsCount,
-    sent_to_customer: 4,
-    accepted: 5
+    draft: draftCount || (quotations.length === 0 ? 1 : 0),
+    pending_approval: pendingCount || (quotations.length === 0 ? 1 : 0),
+    sent_to_customer: sentCount || (quotations.length === 0 ? 1 : 0),
+    accepted: acceptedCount || (quotations.length === 0 ? 1 : 0)
   };
-  const totalStageCount = Object.values(stageDistribution).reduce((a, b) => a + b, 0);
+  const totalStageCount = Object.values(stageDistribution).reduce((a, b) => a + b, 0) || 1;
+
+  // Find critical deal from active pipeline
+  const criticalDeal = quotations.find((q) => (q.riskScore && q.riskScore >= 50) || q.status === 'pending_approval') || quotations[0] || null;
+
+  // Current dynamic alert from live dealHealthService or highest-risk active quote
+  const currentAlert = healthAlerts.length > 0
+    ? healthAlerts[activeAlertIndex % healthAlerts.length]
+    : (criticalDeal ? {
+        id: criticalDeal.quotationNumber,
+        quotationId: criticalDeal._id,
+        deal: criticalDeal.customerName,
+        issue: criticalDeal.approvalReason || (criticalDeal.riskScore >= 50 ? `High Risk Score (${criticalDeal.riskScore}) requires mitigation` : 'Pending Governance Sign-off'),
+        value: formatCurrency(criticalDeal.grandTotal),
+        riskScore: criticalDeal.riskScore,
+        action: criticalDeal.requiresApproval ? 'Awaiting Approval' : 'Review Required',
+        rep: 'Sales Team'
+      } : null);
 
   return (
     <div className="space-y-8 animate-fadeIn pb-12">
@@ -427,72 +511,192 @@ export const DashboardPage = () => {
 
         {/* Right 1 Col: Telemetry Decay Alert + Live Activity Stream */}
         <div className="space-y-6">
-          {/* Active Stalled Deal Callout */}
+          {/* Active Stalled Deal Callout - 100% Dynamic from real DealHealth & active pipeline */}
           <div className="p-6 rounded-[22px] bg-gradient-to-br from-[#ff9f0a]/10 via-[#ff9f0a]/5 to-transparent border border-[#ff9f0a]/25 dark:border-[#ff9f0a]/20 backdrop-blur-xl">
-            <div className="flex items-center gap-2 text-[#9e5200] dark:text-[#ff9f0a] font-semibold text-[13px] uppercase tracking-wide">
-              <AlertTriangle className="w-4 h-4" />
-              Telemetry Stale Warning
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-[#9e5200] dark:text-[#ff9f0a] font-semibold text-[13px] uppercase tracking-wide">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Telemetry Risk Warning</span>
+              </div>
+              {healthAlerts.length > 1 ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-mono text-[#86868b] mr-1">
+                    {activeAlertIndex + 1} of {healthAlerts.length}
+                  </span>
+                  <button
+                    onClick={() => setActiveAlertIndex((prev) => (prev > 0 ? prev - 1 : healthAlerts.length - 1))}
+                    className="p-1 rounded-md hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white transition-colors"
+                    title="Previous alert"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setActiveAlertIndex((prev) => (prev + 1) % healthAlerts.length)}
+                    className="p-1 rounded-md hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white transition-colors"
+                    title="Next alert"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : currentAlert?.riskScore ? (
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#ff9f0a]/20 text-[#9e5200] dark:text-[#ff9f0a] font-bold">
+                  Score {currentAlert.riskScore}
+                </span>
+              ) : null}
             </div>
-            <h4 className="text-[15px] font-bold text-[#1d1d1f] dark:text-white mt-2">
-              Zenith Co • Idle 9 Days
-            </h4>
-            <p className="text-[13px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-              Quote <span className="font-mono text-[12px]">$18,300</span> has received no customer view or counter-offer since Aug 24.
-            </p>
-            <div className="mt-4 flex items-center gap-2">
-              <Button
-                onClick={() => navigate('/deal-health')}
-                variant="primary"
-                size="sm"
-                className="w-full text-[12px] justify-center bg-[#ff9f0a] hover:bg-[#e08905] text-white border-none"
-              >
-                Inspect Deal Health
-              </Button>
-            </div>
+
+            {loadingHealth && healthAlerts.length === 0 ? (
+              <div className="py-6 text-center text-[#86868b] text-[12px]">
+                Scanning telemetry pipelines...
+              </div>
+            ) : currentAlert ? (
+              <div>
+                <div className="flex items-center justify-between mt-2">
+                  <h4 className="text-[15px] font-bold text-[#1d1d1f] dark:text-white truncate">
+                    {currentAlert.deal} • {currentAlert.id}
+                  </h4>
+                  {healthAlerts.length > 1 && currentAlert.riskScore && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#ff9f0a]/20 text-[#9e5200] dark:text-[#ff9f0a] font-bold shrink-0 ml-2">
+                      Score {currentAlert.riskScore}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[13px] text-[#6e6e73] dark:text-[#86868b] mt-1.5 line-clamp-2">
+                  <span className="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{currentAlert.issue}</span>
+                  {currentAlert.value && (
+                    <>
+                      {' '}— Deal value <span className="font-mono font-medium text-[#1d1d1f] dark:text-white">{currentAlert.value}</span>.
+                    </>
+                  )}{' '}
+                  Action: <span className="italic">{currentAlert.action}</span> ({currentAlert.rep || 'Sales Team'}).
+                </p>
+                <div className="mt-4 flex flex-col sm:flex-row items-center gap-2">
+                  <Button
+                    onClick={() => navigate('/deal-health')}
+                    variant="primary"
+                    size="sm"
+                    className="w-full sm:flex-1 text-[12px] justify-center bg-[#ff9f0a] hover:bg-[#e08905] text-white border-none shadow-sm"
+                  >
+                    Inspect Deal Health
+                  </Button>
+                  {(currentAlert.quotationId || currentAlert.id) && (
+                    <Button
+                      onClick={() => navigate(`/quotations/${currentAlert.quotationId || currentAlert.id}`)}
+                      variant="secondary"
+                      size="sm"
+                      className="w-full sm:w-auto text-[12px] justify-center whitespace-nowrap"
+                    >
+                      Open Quote
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="py-4">
+                <div className="flex items-center gap-2 text-[#1b7e36] dark:text-[#30d158] font-semibold text-[14px]">
+                  <CheckCircle2 className="w-4 h-4" />
+                  All Deals Healthy
+                </div>
+                <p className="text-[13px] text-[#6e6e73] dark:text-[#86868b] mt-1">
+                  Zero stalled quotations or discount threshold breaches detected across active accounts.
+                </p>
+                <div className="mt-4">
+                  <Button
+                    onClick={() => navigate('/deal-health')}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full text-[12px] justify-center"
+                  >
+                    View Deal Health Matrix
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Live System Activity Feed */}
+          {/* Live System Activity Feed - 100% Dynamic & Clickable */}
           <Card className="p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.06] mb-4">
+            <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.06] mb-3">
               <div className="font-semibold text-[14px] text-[#1d1d1f] dark:text-white flex items-center gap-2">
                 <Activity className="w-4 h-4 text-[#0071e3] dark:text-[#2997ff]" />
                 System Activity Feed
               </div>
-              <span className="text-[11px] text-[#86868b] font-mono">Live</span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-[#30d158]/15 text-[#1b7a36] dark:text-[#30d158] border border-[#30d158]/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#30d158] animate-pulse" />
+                  Live
+                </span>
+                <button
+                  onClick={fetchActivities}
+                  disabled={loadingActivities}
+                  title="Refresh live activity feed"
+                  className="p-1 rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-white transition-colors"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingActivities ? 'animate-spin text-[#0071e3]' : ''}`} />
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3.5 text-[13px]">
-              <div className="flex items-start space-x-3">
-                <span className="w-2 h-2 rounded-full bg-[#30d158] ring-4 ring-[#30d158]/20 mt-1.5 shrink-0" />
-                <div>
-                  <div className="text-[#1d1d1f] dark:text-white font-medium">Acme Corp quote approved</div>
-                  <div className="text-[11px] text-[#86868b]">Finance VP sign-off • 10m ago</div>
+            <div className="space-y-2 text-[13px]">
+              {loadingActivities && activities.length === 0 ? (
+                <div className="py-8 text-center space-y-2">
+                  <div className="w-5 h-5 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin mx-auto" />
+                  <span className="text-[12px] text-[#86868b]">Streaming system events...</span>
                 </div>
-              </div>
+              ) : activities.length === 0 ? (
+                <div className="py-6 text-center text-[#86868b] text-[12px]">
+                  No system events recorded yet.
+                </div>
+              ) : (
+                activities.slice(0, 5).map((act) => (
+                  <div
+                    key={act.id}
+                    onClick={() => act.targetUrl && navigate(act.targetUrl)}
+                    className="p-2.5 rounded-xl -mx-2 hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-all cursor-pointer group flex items-start justify-between gap-2.5"
+                  >
+                    <div className="flex items-start space-x-3 min-w-0 flex-1">
+                      <span
+                        style={{ backgroundColor: act.dotColor }}
+                        className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${act.dotRing || 'ring-4 ring-black/10'}`}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[#1d1d1f] dark:text-white font-medium truncate group-hover:text-[#0071e3] dark:group-hover:text-[#2997ff] transition-colors">
+                            {act.title}
+                          </span>
+                          {act.badgeText && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/[0.05] dark:bg-white/[0.08] text-[#6e6e73] dark:text-[#86868b]">
+                              {act.badgeText}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-[#86868b] dark:text-[#6e6e73] truncate mt-0.5">
+                          {act.subtitle}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                      <span className="text-[11px] font-mono text-[#86868b] whitespace-nowrap">
+                        {getRelativeTime(act.timestamp)}
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 text-[#0071e3] dark:text-[#2997ff] transition-all" />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
 
-              <div className="flex items-start space-x-3">
-                <span className="w-2 h-2 rounded-full bg-[#ff9f0a] ring-4 ring-[#ff9f0a]/20 mt-1.5 shrink-0" />
-                <div>
-                  <div className="text-[#1d1d1f] dark:text-white font-medium">Discount escalation requested</div>
-                  <div className="text-[11px] text-[#86868b]">Beta Industries (22% discount) • 35m ago</div>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <span className="w-2 h-2 rounded-full bg-[#0071e3] dark:bg-[#2997ff] ring-4 ring-[#0071e3]/20 mt-1.5 shrink-0" />
-                <div>
-                  <div className="text-[#1d1d1f] dark:text-white font-medium">East Depot stock reserved</div>
-                  <div className="text-[11px] text-[#86868b]">Order #2291 split delivery • 1h ago</div>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <span className="w-2 h-2 rounded-full bg-[#bf5af2] ring-4 ring-[#bf5af2]/20 mt-1.5 shrink-0" />
-                <div>
-                  <div className="text-[#1d1d1f] dark:text-white font-medium">Mid-cycle proration invoiced</div>
-                  <div className="text-[11px] text-[#86868b]">Vertex BioHealth Labs • 2h ago</div>
-                </div>
-              </div>
+            <div className="pt-3 mt-2 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#30d158]" />
+                Auto-syncing with live database
+              </span>
+              <button
+                onClick={() => navigate('/quotations')}
+                className="text-[#0071e3] dark:text-[#2997ff] hover:underline font-medium"
+              >
+                View Pipeline →
+              </button>
             </div>
           </Card>
         </div>

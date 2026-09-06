@@ -8,15 +8,17 @@ import IsometricIllustration from '../../components/auth/IsometricIllustration';
 const PERSONAS = [
   { name: 'Alex Rivera', role: 'Sales Rep', email: 'alex@dealflow360.com' },
   { name: 'Sarah Vance', role: 'Manager', email: 'sarah@dealflow360.com' },
+  { name: 'David Sterling', role: 'Finance / Ops', email: 'finance@dealflow360.com' },
   { name: 'Marcus Chen', role: 'Admin', email: 'admin@dealflow360.com' },
+  { name: 'Acme Buyer', role: 'Customer Portal', email: 'procurement@acme.com', isCustomer: true },
 ];
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, loginWithMagicLink, register } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
 
-  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'signup'
+  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'signup' | 'magic'
   const [activePersonaIndex, setActivePersonaIndex] = useState(0);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('peter.parker@mail.com');
@@ -26,6 +28,17 @@ export const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [magicSent, setMagicSent] = useState(false);
+
+  // Auto-login via Magic Link URL parameter
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const magicToken = params.get('token') || params.get('magic');
+    if (magicToken) {
+      localStorage.setItem('dealflow_token', magicToken);
+      navigate('/portal');
+    }
+  }, [navigate]);
 
   const handleSelectPersona = (index) => {
     setActivePersonaIndex(index);
@@ -39,12 +52,24 @@ export const LoginPage = () => {
     setLoading(true);
 
     try {
-      if (activeTab === 'login') {
-        await login(email, password);
-      } else {
-        await register({ name, email, password, role, department: company });
+      if (activeTab === 'magic' || email.includes('procurement') || email.includes('customer')) {
+        const res = await loginWithMagicLink(email);
+        navigate('/portal');
+        return;
       }
-      navigate('/dashboard');
+
+      let res;
+      if (activeTab === 'login') {
+        res = await login(email, password);
+      } else {
+        res = await register({ name, email, password, role, department: company });
+      }
+
+      if (res?.data?.role === 'customer') {
+        navigate('/portal');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Authentication failed. Please check credentials.');
     } finally {
@@ -60,10 +85,36 @@ export const LoginPage = () => {
     setError('');
     setLoading(true);
     try {
-      await login(demoEmail, demoPassword);
-      navigate('/dashboard');
+      if (PERSONAS[pIndex]?.isCustomer || demoEmail.includes('procurement') || demoEmail.includes('customer')) {
+        await loginWithMagicLink(demoEmail);
+        navigate('/portal');
+      } else {
+        const res = await login(demoEmail, demoPassword);
+        if (res?.data?.role === 'customer') {
+          navigate('/portal');
+        } else {
+          navigate('/dashboard');
+        }
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Demo login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMagicLinkSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await loginWithMagicLink(email || 'procurement@acme.com');
+      setMagicSent(true);
+      setTimeout(() => {
+        navigate('/portal');
+      }, 800);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to verify magic link');
     } finally {
       setLoading(false);
     }
@@ -333,8 +384,8 @@ export const LoginPage = () => {
                   </div>
                 </div>
 
-                {/* 1-Click Persona Quick Pills */}
-                <div className="grid grid-cols-3 gap-2">
+                {/* 1-Click Persona Quick Pills (5 Personas: Rep, Manager, Finance / Ops, Admin, Customer) */}
+                <div className="grid grid-cols-2 gap-2">
                   {PERSONAS.map((p, idx) => (
                     <button
                       key={p.email}
@@ -344,16 +395,30 @@ export const LoginPage = () => {
                         handleDemoLogin(p.email);
                       }}
                       className={`p-2 sm:p-2.5 rounded-xl text-left transition-all border ${
+                        p.isCustomer ? 'col-span-2 sm:col-span-2' : ''
+                      } ${
                         activePersonaIndex === idx
                           ? 'bg-[#00cba0]/15 border-[#00cba0] shadow-xs text-[#064e3b] dark:text-[#00cba0] font-semibold'
                           : 'bg-white/70 dark:bg-white/[0.04] border-black/[0.06] dark:border-white/[0.08] text-[#4b6358] dark:text-[#9bb8ad] hover:border-[#00cba0]/50'
                       }`}
                     >
-                      <div className="text-[12.5px] font-medium text-[#111827] dark:text-white truncate">{p.name}</div>
-                      <div className="text-[10.5px] font-mono text-[#00a884] dark:text-[#00cba0] opacity-90 truncate mt-0.5">{p.role}</div>
+                      <div className="text-[12px] sm:text-[12.5px] font-medium text-[#111827] dark:text-white truncate flex items-center justify-between">
+                        <span>{p.name}</span>
+                        {p.isCustomer && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#00cba0]/20 text-[#00a884] dark:text-[#00cba0] font-mono">PORTAL</span>}
+                      </div>
+                      <div className="text-[10px] sm:text-[10.5px] font-mono text-[#00a884] dark:text-[#00cba0] opacity-90 truncate mt-0.5">{p.role}</div>
                     </button>
                   ))}
                 </div>
+
+                {/* Direct Magic Link Instant Access Pill */}
+                <button
+                  type="button"
+                  onClick={() => handleMagicLinkSubmit()}
+                  className="w-full mt-2.5 py-2 px-3 rounded-xl bg-[#00cba0]/10 hover:bg-[#00cba0]/20 text-[#00a884] dark:text-[#00cba0] text-[12px] font-medium transition-colors border border-[#00cba0]/30 flex items-center justify-center gap-1.5"
+                >
+                  <span>🔗 Customer Portal: Instant Magic Link Login</span>
+                </button>
               </div>
 
             </div>

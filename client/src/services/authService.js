@@ -19,6 +19,15 @@ export const authService = {
     return res.data;
   },
 
+  loginWithMagicLink: async (email = 'procurement@acme.com', quotationNumber = 'Q-1042') => {
+    const res = await api.post('/auth/magic-link', { email, quotationNumber });
+    if (res.data && res.data.data) {
+      localStorage.setItem('dealflow_token', res.data.data.token);
+      localStorage.setItem('dealflow_user', JSON.stringify(res.data.data));
+    }
+    return res.data;
+  },
+
   getCurrentUser: async () => {
     const res = await api.get('/auth/me');
     return res.data;

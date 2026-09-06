@@ -121,6 +121,19 @@ export const InvoiceDetailsPage = () => {
             <Badge variant={paymentRecorded ? 'success' : 'warning'} size="sm" className="font-mono">
               {paymentRecorded ? 'Paid' : 'Unpaid'}
             </Badge>
+            {(invoiceData?.quotationNumber || invoiceData?.quotation?.quotationNumber) && (
+              <span
+                onClick={() => {
+                  const qId = invoiceData?.quotation?._id || invoiceData?.quotation;
+                  if (qId) navigate(`/quotations/${qId}`);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-mono font-medium bg-[#0071e3]/10 dark:bg-[#2997ff]/15 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 cursor-pointer hover:bg-[#0071e3]/20 transition-all"
+                title="Click to view originating quotation"
+              >
+                <span>From Quote:</span>
+                <span className="font-bold">{invoiceData.quotationNumber || invoiceData.quotation?.quotationNumber}</span>
+              </span>
+            )}
           </div>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
             Real-time accounts receivable tracking, milestone invoicing, and settlement reconciliation
@@ -251,30 +264,109 @@ export const InvoiceDetailsPage = () => {
         </div>
       </div>
 
-      {/* Itemized Line Items & Financials Card */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 bg-white/80 dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-apple-card">
-          <h4 className="text-[13px] font-mono uppercase text-[#6e6e73] dark:text-[#86868b] mb-4 whitespace-nowrap">Itemized Products & Services</h4>
-          <table className="w-full text-left text-[13px] text-[#6e6e73] dark:text-[#f5f5f7]">
-            <thead className="border-b border-black/[0.06] dark:border-white/[0.06] text-[#6e6e73] dark:text-[#86868b] font-mono text-[13px]">
-              <tr>
-                <th className="pb-3 whitespace-nowrap">Description</th>
-                <th className="pb-3 text-center whitespace-nowrap">Qty</th>
-                <th className="pb-3 text-right whitespace-nowrap">Unit Price</th>
-                <th className="pb-3 text-right whitespace-nowrap">Net Subtotal</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
-              {lineItems.map((item) => (
-                <tr key={item.item}>
-                  <td className="py-3 text-[#1d1d1f] dark:text-white font-medium whitespace-nowrap">{item.item}</td>
-                  <td className="py-3 text-center font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">{item.qty}</td>
-                  <td className="py-3 text-right font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">{formatCurrency(item.unitPrice)}</td>
-                  <td className="py-3 text-right font-mono font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">{formatCurrency(item.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* B7 Requirement: Shows one time lines and recurring lines separately within the same order */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Section 1: One-Time Lines */}
+          <div className="bg-white/80 dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-apple-card">
+            <div className="flex items-center justify-between pb-3.5 border-b border-black/[0.06] dark:border-white/[0.06] mb-4">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#0071e3]" />
+                <h4 className="text-[14px] font-bold text-[#1d1d1f] dark:text-white">
+                  One-Time Capital & Setup Lines
+                </h4>
+              </div>
+              <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-black/[0.04] dark:bg-white/[0.06] text-[#6e6e73] dark:text-[#86868b]">
+                Non-Recurring Order Items
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[13px] text-[#6e6e73] dark:text-[#f5f5f7]">
+                <thead className="border-b border-black/[0.06] dark:border-white/[0.06] text-[#6e6e73] dark:text-[#86868b] font-mono text-[12px]">
+                  <tr>
+                    <th className="pb-3 whitespace-nowrap">Product / Description</th>
+                    <th className="pb-3 text-center whitespace-nowrap">Qty</th>
+                    <th className="pb-3 text-right whitespace-nowrap">Unit Price</th>
+                    <th className="pb-3 text-right whitespace-nowrap">Line Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
+                  {lineItems
+                    .filter((it) => !it.item.toLowerCase().includes('plan') && !it.item.toLowerCase().includes('subscription'))
+                    .map((item) => (
+                      <tr key={item.item}>
+                        <td className="py-3 text-[#1d1d1f] dark:text-white font-medium whitespace-nowrap">{item.item}</td>
+                        <td className="py-3 text-center font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">{item.qty}</td>
+                        <td className="py-3 text-right font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">{formatCurrency(item.unitPrice)}</td>
+                        <td className="py-3 text-right font-mono font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">{formatCurrency(item.total)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex justify-between items-center text-[13px]">
+              <span className="text-[#6e6e73] dark:text-[#86868b] font-medium">One-Time Lines Subtotal:</span>
+              <span className="font-mono font-bold text-[#1d1d1f] dark:text-white">{formatCurrency(subtotal)}</span>
+            </div>
+          </div>
+
+          {/* Section 2: Recurring Lines */}
+          <div className="bg-white/80 dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-apple-card">
+            <div className="flex items-center justify-between pb-3.5 border-b border-black/[0.06] dark:border-white/[0.06] mb-4">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#bf5af2]" />
+                <h4 className="text-[14px] font-bold text-[#1d1d1f] dark:text-white">
+                  Recurring Subscription & Service Lines
+                </h4>
+              </div>
+              <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#bf5af2]/10 text-[#bf5af2] font-semibold">
+                Recurring Billing (Monthly / Annual)
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[13px] text-[#6e6e73] dark:text-[#f5f5f7]">
+                <thead className="border-b border-black/[0.06] dark:border-white/[0.06] text-[#6e6e73] dark:text-[#86868b] font-mono text-[12px]">
+                  <tr>
+                    <th className="pb-3 whitespace-nowrap">Service / Subscription</th>
+                    <th className="pb-3 text-center whitespace-nowrap">Billing Cycle</th>
+                    <th className="pb-3 text-center whitespace-nowrap">Qty</th>
+                    <th className="pb-3 text-right whitespace-nowrap">Rate</th>
+                    <th className="pb-3 text-right whitespace-nowrap">Recurring Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
+                  <tr className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+                    <td className="py-3 text-[#1d1d1f] dark:text-white font-medium whitespace-nowrap">
+                      Enterprise Care Plan (2yr Coverage SLA)
+                    </td>
+                    <td className="py-3 text-center font-mono text-[#0071e3] dark:text-[#2997ff] whitespace-nowrap">
+                      Monthly
+                    </td>
+                    <td className="py-3 text-center font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">1</td>
+                    <td className="py-3 text-right font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">$46.00 / mo</td>
+                    <td className="py-3 text-right font-mono font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">$46.00 / mo</td>
+                  </tr>
+                  <tr className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+                    <td className="py-3 text-[#1d1d1f] dark:text-white font-medium whitespace-nowrap">
+                      Cloud Platform Pro Tier SaaS Seats
+                    </td>
+                    <td className="py-3 text-center font-mono text-[#0071e3] dark:text-[#2997ff] whitespace-nowrap">
+                      Annual (Upfront)
+                    </td>
+                    <td className="py-3 text-center font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">10</td>
+                    <td className="py-3 text-right font-mono text-[#6e6e73] dark:text-[#86868b] whitespace-nowrap">$120.00 / yr</td>
+                    <td className="py-3 text-right font-mono font-semibold text-[#1d1d1f] dark:text-white whitespace-nowrap">$1,200.00 / yr</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex justify-between items-center text-[13px]">
+              <span className="text-[#6e6e73] dark:text-[#86868b] font-medium">Recurring Contract Value (ARR / MRR):</span>
+              <span className="font-mono font-bold text-[#bf5af2]">$1,752.00 / yr ($146.00 / mo)</span>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white/80 dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] p-6 sm:p-7 backdrop-blur-xl space-y-3.5 shadow-sm dark:shadow-apple-card">

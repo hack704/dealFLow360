@@ -75,7 +75,7 @@ export const ApprovalsQueuePage = () => {
               (it.riskScore > 50 ? 'HIGH' : it.riskScore > 20 ? 'MEDIUM' : 'LOW')
             ).toUpperCase(),
             stage: it.currentStage || 'Sales Manager',
-            assignedTo: it.assignedTo || it.submitterName || 'M. Shah',
+            assignedTo: it.assignedTo || it.submitterName || it.approverName || 'M. Shah',
             status: it.status || 'pending',
             dealValue: it.dealValue || it.quotation?.grandTotal || 0
           }));

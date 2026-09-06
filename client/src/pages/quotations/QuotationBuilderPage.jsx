@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuotation } from '../../context/QuotationContext';
 import quotationService from '../../services/quotationService';
 import customerService from '../../services/customerService';
@@ -10,9 +10,10 @@ import DiscountSummary from '../../components/quotation/DiscountSummary';
 import BlendedRiskCard from '../../components/quotation/BlendedRiskCard';
 import UpsellPanel from '../../components/quotation/UpsellPanel';
 import Button from '../../components/common/Button';
-import { Send, Save, ArrowLeft, CheckCircle, Sparkles } from 'lucide-react';
+import { Send, Save, ArrowLeft, CheckCircle, Sparkles, Truck } from 'lucide-react';
 
 export const QuotationBuilderPage = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const {
     customer,
@@ -24,12 +25,30 @@ export const QuotationBuilderPage = () => {
     notes,
     paymentTermsDays,
     calculation,
+    loadQuotation,
     resetBuilder
   } = useQuotation();
 
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Load existing quotation into builder if ID provided in route
+  useEffect(() => {
+    if (id) {
+      const fetchExisting = async () => {
+        try {
+          const res = await quotationService.getQuotationById(id);
+          if (res?.data) {
+            loadQuotation(res.data);
+          }
+        } catch (err) {
+          console.warn('Could not load quote into builder:', err.message);
+        }
+      };
+      fetchExisting();
+    }
+  }, [id]);
 
   const handleAutoFillDemo = async () => {
     try {
@@ -50,30 +69,9 @@ export const QuotationBuilderPage = () => {
         setTitle(`Enterprise Agreement - ${targetCust.name}`);
       }
 
-      const hardware = prods.find((p) => p.category === 'Hardware') || {
-        _id: 'p-demo-hw',
-        name: 'Laptop Pro 14',
-        category: 'Hardware',
-        basePrice: 1200,
-        unitCost: 750,
-        sku: 'HW-LAP-14'
-      };
-      const service = prods.find((p) => p.category === 'Services') || {
-        _id: 'p-demo-srv',
-        name: 'Onsite Setup Service',
-        category: 'Services',
-        basePrice: 450,
-        unitCost: 150,
-        sku: 'SRV-SETUP'
-      };
-      const sub = prods.find((p) => p.category === 'Subscription') || {
-        _id: 'p-demo-sub',
-        name: 'Care Plan 2 years',
-        category: 'Subscription',
-        basePrice: 180,
-        unitCost: 40,
-        sku: 'SUB-CARE-2Y'
-      };
+      const hardware = prods.find((p) => p.category === 'Hardware') || prods[0];
+      const service = prods.find((p) => p.category === 'Services') || prods[1] || prods[0];
+      const sub = prods.find((p) => p.category === 'Subscription') || prods[2] || prods[0];
 
       setItems([
         {
@@ -117,7 +115,7 @@ export const QuotationBuilderPage = () => {
     }
   };
 
-  const handleSaveQuote = async (status = 'draft') => {
+  const handleSaveQuote = async (actionType = 'draft') => {
     if (!customer) {
       setErrorMessage('Please select a customer before saving the quotation.');
       return;
@@ -130,13 +128,16 @@ export const QuotationBuilderPage = () => {
     setSaving(true);
     setErrorMessage('');
     try {
+      const isFulfillmentDirect = actionType === 'straight_to_fulfillment';
+      const targetStatus = isFulfillmentDirect ? 'approved' : actionType === 'pending_approval' ? 'pending_approval' : 'draft';
+
       const payload = {
         customerId: customer._id || customer,
         title: title || `Enterprise Quote for ${customer.name}`,
         notes,
         paymentTermsDays,
-        status,
-        submitForApproval: status === 'pending_approval',
+        status: targetStatus,
+        submitForApproval: actionType === 'pending_approval',
         items: items.map((it) => ({
           productId: it.productId || it.product?._id || it.product,
           quantity: it.quantity,
@@ -144,25 +145,39 @@ export const QuotationBuilderPage = () => {
         }))
       };
 
-      const res = await quotationService.createQuotation(payload);
-      if (res && res.data) {
-        setSuccessMessage(`Quotation ${res.data.quotationNumber} successfully submitted for approval!`);
+      let quoteResultId = id;
+      if (id) {
+        await quotationService.updateQuotation(id, payload);
+      } else {
+        const res = await quotationService.createQuotation(payload);
+        quoteResultId = res?.data?._id || res?.data?.quotationNumber || quoteResultId;
+      }
+
+      if (isFulfillmentDirect) {
+        setSuccessMessage('Quote confirmed with zero approval triggers! Proceeding straight to fulfillment...');
         setTimeout(() => {
           resetBuilder();
-          if (status === 'draft') {
-            navigate(`/quotations/${res.data._id}`);
-          } else {
-            navigate(`/approvals/${res.data._id}`);
-          }
-        }, 1200);
+          navigate(`/fulfillment/${quoteResultId}`);
+        }, 1000);
+      } else if (actionType === 'pending_approval') {
+        setSuccessMessage('Quotation submitted for governance review! Moving to approval screen...');
+        setTimeout(() => {
+          resetBuilder();
+          navigate(`/approvals/${quoteResultId}`);
+        }, 1000);
+      } else {
+        setSuccessMessage('Draft quotation successfully saved.');
+        setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (err) {
-      console.error('Error creating quote:', err);
-      setErrorMessage(err.response?.data?.message || 'Failed to create quotation');
+      console.error('Error saving quote:', err);
+      setErrorMessage(err.response?.data?.message || 'Failed to save quotation');
     } finally {
       setSaving(false);
     }
   };
+
+  const requiresApproval = calculation?.requiresApproval ?? false;
 
   return (
     <div className="space-y-8">
@@ -176,9 +191,18 @@ export const QuotationBuilderPage = () => {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to all quotes</span>
           </button>
-          <h2 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">Configure, Price, Quote CPQ Builder</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
+              {id ? `Edit Deal Builder (${id})` : 'Quotation Builder (Products + Cart)'}
+            </h2>
+            {id && (
+              <span className="text-[12px] px-2.5 py-0.5 rounded-full bg-[#0071e3]/10 text-[#0071e3] dark:text-[#2997ff] font-mono font-medium">
+                Active Deal Loaded
+              </span>
+            )}
+          </div>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Build enterprise proposals with live volume curves, blended margin risk guardrails, and automated discount rules.
+            Pick products across categories, adjust quantities, apply discounts, and move to approval or fulfillment.
           </p>
         </div>
 
@@ -202,16 +226,32 @@ export const QuotationBuilderPage = () => {
             Save Draft
           </Button>
 
-          <Button
-            onClick={() => handleSaveQuote('pending_approval')}
-            disabled={saving || items.length === 0}
-            loading={saving}
-            variant="primary"
-            size="md"
-            icon={Send}
-          >
-            Submit for Approval
-          </Button>
+          {/* B3 requirement: Confirm and move to approval, or straight to fulfillment if no approval is required */}
+          {requiresApproval ? (
+            <Button
+              onClick={() => handleSaveQuote('pending_approval')}
+              disabled={saving || items.length === 0}
+              loading={saving}
+              variant="primary"
+              size="md"
+              icon={Send}
+              title="Move to approval chain since discount ceiling is exceeded"
+            >
+              Confirm & Move to Approval
+            </Button>
+          ) : (
+            <Button
+              onClick={() => handleSaveQuote('straight_to_fulfillment')}
+              disabled={saving || items.length === 0}
+              loading={saving}
+              variant="success"
+              size="md"
+              icon={Truck}
+              title="No approval required — move straight to warehouse fulfillment"
+            >
+              Confirm & Straight to Fulfillment →
+            </Button>
+          )}
         </div>
       </div>
 

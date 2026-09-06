@@ -79,14 +79,32 @@ export const QuotationItemsTable = () => {
                     {formatCurrency(item.listPrice || item.product?.basePrice)}
                   </td>
 
-                  <td className="py-4 px-3 text-center">
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItemQuantity(prodId, e.target.value)}
-                      className="w-16 h-8 text-center bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-2 text-[#1d1d1f] dark:text-white font-mono text-[12px] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff]"
-                    />
+                  <td className="py-4 px-3 text-center whitespace-nowrap">
+                    <div className="inline-flex items-center space-x-1">
+                      <button
+                        type="button"
+                        onClick={() => updateItemQuantity(prodId, Math.max(1, (item.quantity || 1) - 1))}
+                        className="w-7 h-7 rounded-lg bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-[#1d1d1f] dark:text-white flex items-center justify-center text-[13px] font-bold transition-colors"
+                        title="Decrease quantity"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItemQuantity(prodId, e.target.value)}
+                        className="w-14 h-8 text-center bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.12] dark:border-white/[0.12] rounded-lg px-1.5 text-[#1d1d1f] dark:text-white font-mono text-[12px] focus:outline-none focus:border-[#0071e3] dark:focus:border-[#2997ff]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateItemQuantity(prodId, (item.quantity || 1) + 1)}
+                        className="w-7 h-7 rounded-lg bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-[#1d1d1f] dark:text-white flex items-center justify-center text-[13px] font-bold transition-colors"
+                        title="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
                   </td>
 
                   <td className="py-4 px-4 text-right">

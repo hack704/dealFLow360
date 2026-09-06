@@ -35,6 +35,10 @@ const invoiceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Quotation'
     },
+    quotationNumber: {
+      type: String,
+      default: ''
+    },
     subscription: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Subscription'
@@ -50,7 +54,7 @@ const invoiceSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['One-Time Order', 'Recurring Monthly', 'Recurring Annual', 'Enterprise Milestone'],
+      enum: ['One-Time Order', 'Recurring Monthly', 'Recurring Annual', 'Enterprise Milestone', 'Credit Note'],
       default: 'One-Time Order'
     },
     items: [invoiceLineSchema],
@@ -68,7 +72,7 @@ const invoiceSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Unpaid', 'Paid', 'Overdue', 'Cancelled'],
+      enum: ['Unpaid', 'Paid', 'Overdue', 'Cancelled', 'Refunded'],
       default: 'Unpaid'
     },
     dueDate: {
@@ -82,6 +86,14 @@ const invoiceSchema = new mongoose.Schema(
       method: String,
       transactionId: String,
       recordedBy: String
+    },
+    creditNoteFor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Invoice'
+    },
+    creditReason: {
+      type: String,
+      default: ''
     }
   },
   {

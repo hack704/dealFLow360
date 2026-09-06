@@ -5,28 +5,28 @@ const { sendSuccess, sendError } = require('../utils/apiResponse');
 // @route   GET /api/price-lists
 const getPriceLists = async (req, res, next) => {
   try {
-    let lists = await PriceList.find({ isActive: true });
+    const { tier } = req.query;
+    const filter = { isActive: true };
+    if (tier) filter.tier = tier;
 
-    if (lists.length === 0) {
-      lists = [
-        { id: 1, tier: 'Bronze', currency: 'USD', priceRule: 'Price, no adjustment' },
-        { id: 2, tier: 'Gold', currency: 'USD/EUR', priceRule: 'Price minus 10 percent base' },
-        { id: 3, tier: 'Enterprise Partner', currency: 'USD', priceRule: 'Price minus 18 percent base' }
-      ];
-    }
-
-    return sendSuccess(res, lists, 'Price lists retrieved');
+    const priceLists = await PriceList.find(filter).sort({ tier: 1 });
+    return sendSuccess(res, priceLists, 'Price lists retrieved');
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Create a new price list
+// @desc    Create a price list tier entry
 // @route   POST /api/price-lists
 const createPriceList = async (req, res, next) => {
   try {
     const { name, tier, currency, priceRule, discountModifierPercent } = req.body;
-    const newList = await PriceList.create({
+
+    if (!name || !tier) {
+      return sendError(res, 'name and tier are required', 400);
+    }
+
+    const priceList = await PriceList.create({
       name,
       tier,
       currency: currency || 'USD',
@@ -34,7 +34,7 @@ const createPriceList = async (req, res, next) => {
       discountModifierPercent: discountModifierPercent || 0
     });
 
-    return sendSuccess(res, newList, 'Price list created', 201);
+    return sendSuccess(res, priceList, 'Price list created successfully', 201);
   } catch (error) {
     next(error);
   }

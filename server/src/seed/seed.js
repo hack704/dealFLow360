@@ -59,6 +59,14 @@ const seedData = async () => {
         password: 'password123',
         role: ROLES.ADMIN,
         department: 'Operations'
+      },
+      {
+        _id: '660000000000000000000004',
+        name: 'David Sterling',
+        email: 'finance@dealflow360.com',
+        password: 'password123',
+        role: ROLES.FINANCE,
+        department: 'Finance & Operations'
       }
     ]);
     console.log(`[SEED] Created ${users.length} demo users`);

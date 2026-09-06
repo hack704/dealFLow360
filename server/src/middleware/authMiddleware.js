@@ -24,21 +24,24 @@ const protect = async (req, res, next) => {
     }
   }
 
-  // 2. Demo/Development Fallback: auto-assign admin user to avoid blocking CPQ flow
-  try {
-    const fallbackUser =
-      (await User.findOne({ role: 'admin', isActive: true }).select('-password')) ||
-      (await User.findOne({ isActive: true }).select('-password'));
-
-    if (fallbackUser) {
-      req.user = fallbackUser;
-      return next();
-    }
-  } catch (err) {
-    console.error('[AUTH] Fallback user query error:', err.message);
-  }
-
-  return sendError(res, 'Not authorized, token required', 401);
+  return sendError(res, 'Not authorized, valid token required', 401);
 };
 
-module.exports = { protect };
+// Role-based authorization middleware
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return sendError(res, 'Not authorized, please log in', 401);
+    }
+    if (!roles.includes(req.user.role) && req.user.role !== 'admin') {
+      return sendError(
+        res,
+        `Access denied: Role '${req.user.role}' is not authorized to access this resource`,
+        403
+      );
+    }
+    next();
+  };
+};
+
+module.exports = { protect, authorize };

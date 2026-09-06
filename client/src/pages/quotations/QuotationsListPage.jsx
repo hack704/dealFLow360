@@ -8,12 +8,24 @@ import { Plus, LayoutGrid, Table as TableIcon, Search, ArrowRight } from 'lucide
 import { formatCurrency, formatPercent, formatDate } from '../../utils/formatters';
 import { QUOTATION_STATUSES } from '../../utils/constants';
 
-export const QuotationsListPage = () => {
+import { useLocation } from 'react-router-dom';
+
+export const QuotationsListPage = ({ initialView }) => {
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'table'
+  const location = useLocation();
+  const isPipelineRoute = location.pathname === '/pipeline' || initialView === 'kanban';
+  const [viewMode, setViewMode] = useState(isPipelineRoute ? 'kanban' : (initialView || 'table')); // 'kanban' | 'table'
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    if (location.pathname === '/pipeline') {
+      setViewMode('kanban');
+    } else if (location.pathname === '/quotations' && !initialView) {
+      setViewMode('table');
+    }
+  }, [location.pathname, initialView]);
 
   const defaultMockQuotes = [
     { _id: 'Q-1042', quotationNumber: 'Q-1042', customerName: 'Acme Corp', grandTotal: 12400, blendedMarginPercent: 81.6, riskScore: 15, status: 'draft' },
@@ -170,7 +182,8 @@ export const QuotationsListPage = () => {
                   {itemsInCol.map((quote) => (
                     <div
                       key={quote._id}
-                      onClick={() => navigate(`/quotations/${quote._id}`)}
+                      onClick={() => navigate(`/quotations/builder/${quote._id}`)}
+                      title="Select quotation to open Quotation Builder for this deal"
                       className="p-4 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-black/[0.08] dark:border-white/[0.08] hover:border-[#0071e3] dark:hover:border-[#2997ff]/60 hover:shadow-md dark:hover:bg-[#242426] cursor-pointer transition-all group shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
                     >
                       <div className="flex justify-between items-start gap-2">
@@ -184,7 +197,7 @@ export const QuotationsListPage = () => {
                       <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-black/[0.06] dark:border-white/[0.06] text-[13px] text-[#6e6e73] dark:text-apple-dim font-mono">
                         <span className="whitespace-nowrap">{quote.quotationNumber}</span>
                         <span className="text-[#6e6e73] dark:text-apple-muted group-hover:text-[#0071e3] dark:group-hover:text-[#2997ff] flex items-center gap-1 font-sans font-medium whitespace-nowrap">
-                          <span>Open</span>
+                          <span>Open Builder</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </span>
                       </div>
@@ -220,7 +233,8 @@ export const QuotationsListPage = () => {
                 {filteredQuotes.map((q) => (
                   <tr
                     key={q._id}
-                    onClick={() => navigate(`/quotations/${q._id}`)}
+                    onClick={() => navigate(`/quotations/builder/${q._id}`)}
+                    title="Select quotation to open Quotation Builder for this deal"
                     className="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] cursor-pointer transition-colors"
                   >
                     <td className="py-4 px-5 whitespace-nowrap">

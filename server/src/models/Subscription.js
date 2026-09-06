@@ -39,6 +39,43 @@ const subscriptionSchema = new mongoose.Schema(
       enum: ['Active', 'Paused', 'Cancelled', 'Pending'],
       default: 'Active'
     },
+    pausedAt: {
+      type: Date
+    },
+    pauseReason: {
+      type: String,
+      default: ''
+    },
+    resumedAt: {
+      type: Date
+    },
+    totalPausedDays: {
+      type: Number,
+      default: 0
+    },
+    returnPolicy: {
+      gracePeriodDays: { type: Number, default: 14 },
+      policyType: {
+        type: String,
+        enum: ['prorated_credit', 'full_refund_grace', 'no_refund'],
+        default: 'prorated_credit'
+      },
+      refundMethod: {
+        type: String,
+        enum: ['credit_note', 'original_payment'],
+        default: 'credit_note'
+      },
+      allowMidCycleCancellation: { type: Boolean, default: true },
+      adminFeePercent: { type: Number, default: 0 }
+    },
+    cancellationDetails: {
+      cancelledAt: Date,
+      cancelledBy: String,
+      reason: String,
+      refundAmount: Number,
+      refundMethod: String,
+      creditNoteNumber: String
+    },
     startDate: {
       type: Date,
       default: Date.now

@@ -36,6 +36,14 @@ const approvalRuleSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+    version: {
+      type: Number,
+      default: 1
+    },
+    lastUpdatedBy: {
+      type: String,
+      default: 'Admin'
     }
   },
   {

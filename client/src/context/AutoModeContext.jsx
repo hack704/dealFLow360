@@ -61,8 +61,8 @@ const STAGES = [
 const AutoModeContext = createContext(null);
 
 export const AutoModeProvider = ({ children }) => {
-  // Auto Mode enabled by default per user request
-  const [isAutoMode, setIsAutoMode] = useState(true);
+  // Auto Mode disabled by default
+  const [isAutoMode, setIsAutoMode] = useState(false);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [countdown, setCountdown] = useState(6);

@@ -23,19 +23,9 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (err) {
           console.warn('Existing session invalid:', err.message);
-        }
-      }
-
-      // Auto-fallback: ensure demo admin session is always available
-      const explicitlyLoggedOut = sessionStorage.getItem('dealflow_logged_out');
-      if (!explicitlyLoggedOut && window.location.pathname !== '/login') {
-        try {
-          const res = await authService.login('admin@dealflow360.com', 'password123');
-          if (res && res.data) {
-            setUser(res.data);
-          }
-        } catch (loginErr) {
-          console.warn('Auto-login fallback failed:', loginErr.message);
+          localStorage.removeItem('dealflow_token');
+          localStorage.removeItem('dealflow_user');
+          setUser(null);
         }
       }
 
@@ -63,6 +53,15 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  const loginWithMagicLink = async (email, quotationNumber) => {
+    sessionStorage.removeItem('dealflow_logged_out');
+    const res = await authService.loginWithMagicLink(email, quotationNumber);
+    if (res && res.data) {
+      setUser(res.data);
+    }
+    return res;
+  };
+
   const logout = () => {
     sessionStorage.setItem('dealflow_logged_out', 'true');
     authService.logout();
@@ -70,7 +69,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithMagicLink, register, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
