@@ -14,7 +14,7 @@ export const QuotationsListPage = ({ initialView }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isPipelineRoute = location.pathname === '/pipeline' || initialView === 'kanban';
-  const [viewMode, setViewMode] = useState(isPipelineRoute ? 'kanban' : (initialView || 'table')); // 'kanban' | 'table'
+  const [viewMode, setViewMode] = useState(isPipelineRoute ? 'kanban' : (initialView || 'table'));
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,10 +22,10 @@ export const QuotationsListPage = ({ initialView }) => {
   useEffect(() => {
     if (location.pathname === '/pipeline') {
       setViewMode('kanban');
-    } else if (location.pathname === '/quotations' && !initialView) {
+    } else {
       setViewMode('table');
     }
-  }, [location.pathname, initialView]);
+  }, [location.pathname]);
 
   const defaultMockQuotes = [
     { _id: 'Q-1042', quotationNumber: 'Q-1042', customerName: 'Acme Corp', grandTotal: 12400, blendedMarginPercent: 81.6, riskScore: 15, status: 'draft' },
@@ -81,14 +81,16 @@ export const QuotationsListPage = ({ initialView }) => {
 
   return (
     <div className="space-y-7">
-      {/* Wireframe Header (Screen 3) */}
+      {/* Dynamic Header based on route */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-black/[0.08] dark:border-white/[0.08]">
         <div>
           <h1 className="text-[26px] sm:text-[28px] font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-[-0.025em]">
-            Quotations
+            {isPipelineRoute ? 'Deal Pipeline' : 'Quotations'}
           </h1>
           <p className="text-[13px] sm:text-[14px] text-[#6e6e73] dark:text-[#86868b] mt-1">
-            Enterprise quotation management, lifecycle tracking, and instant CPQ access
+            {isPipelineRoute
+              ? 'Visual Kanban deal stages, velocity tracking, and pipeline lifecycle'
+              : 'Enterprise quotation management, lifecycle tracking, and instant CPQ access'}
           </p>
         </div>
 
@@ -99,16 +101,22 @@ export const QuotationsListPage = ({ initialView }) => {
             size="md"
             icon={Plus}
           >
-            New Quotation
+            {isPipelineRoute ? 'New Deal' : 'New Quotation'}
           </Button>
 
           <Button
-            onClick={() => setViewMode(viewMode === 'kanban' ? 'table' : 'kanban')}
+            onClick={() => {
+              if (isPipelineRoute) {
+                navigate('/quotations');
+              } else {
+                navigate('/pipeline');
+              }
+            }}
             variant="secondary"
             size="md"
-            icon={viewMode === 'kanban' ? TableIcon : LayoutGrid}
+            icon={isPipelineRoute ? TableIcon : LayoutGrid}
           >
-            {viewMode === 'kanban' ? 'Table View' : 'Kanban View'}
+            {isPipelineRoute ? 'Table View' : 'Kanban Pipeline'}
           </Button>
         </div>
       </div>

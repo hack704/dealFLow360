@@ -259,7 +259,7 @@ export const DashboardPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Metric 1: Total Pipeline Value */}
         <div
-          onClick={() => navigate('/quotations')}
+          onClick={() => navigate('/pipeline')}
           className="p-6 rounded-[22px] bg-white/85 dark:bg-[#161618]/90 border border-black/[0.08] dark:border-white/[0.08] hover:border-[#0071e3]/50 dark:hover:border-[#2997ff]/50 transition-all duration-200 cursor-pointer group shadow-[0_2px_14px_rgba(0,0,0,0.04)] dark:shadow-apple-card backdrop-blur-2xl flex flex-col justify-between"
         >
           <div>
@@ -379,7 +379,7 @@ export const DashboardPage = () => {
             </p>
           </div>
           <Button
-            onClick={() => navigate('/quotations')}
+            onClick={() => navigate('/pipeline')}
             variant="ghost"
             size="sm"
             className="text-[13px] text-[#0071e3] dark:text-[#2997ff]"
@@ -692,7 +692,7 @@ export const DashboardPage = () => {
                 Auto-syncing with live database
               </span>
               <button
-                onClick={() => navigate('/quotations')}
+                onClick={() => navigate('/pipeline')}
                 className="text-[#0071e3] dark:text-[#2997ff] hover:underline font-medium"
               >
                 View Pipeline →
