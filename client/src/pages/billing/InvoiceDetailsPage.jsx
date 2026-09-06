@@ -265,8 +265,8 @@ export const InvoiceDetailsPage = () => {
       </div>
 
       {/* B7 Requirement: Shows one time lines and recurring lines separately within the same order */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 space-y-6">
           {/* Section 1: One-Time Lines */}
           <div className="bg-white/80 dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] p-6 sm:p-7 backdrop-blur-xl shadow-sm dark:shadow-apple-card">
             <div className="flex items-center justify-between pb-3.5 border-b border-black/[0.06] dark:border-white/[0.06] mb-4">
@@ -369,7 +369,8 @@ export const InvoiceDetailsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] p-6 sm:p-7 backdrop-blur-xl space-y-3.5 shadow-sm dark:shadow-apple-card">
+        {/* Sidebar Payment Summary Card */}
+        <div className="lg:col-span-4 bg-white/80 dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.08] rounded-[22px] p-6 sm:p-7 backdrop-blur-xl space-y-3.5 shadow-sm dark:shadow-apple-card">
           <h4 className="text-[13px] font-mono uppercase text-[#6e6e73] dark:text-[#86868b] mb-2 whitespace-nowrap">Payment Summary</h4>
           <div className="flex justify-between text-[13px] text-[#6e6e73] dark:text-[#86868b]">
             <span className="whitespace-nowrap">Line Subtotal:</span>
