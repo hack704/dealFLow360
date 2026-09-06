@@ -216,3 +216,32 @@ classDiagram
   - `message`: Counter-proposal text or redline note.
   - `counter_discount`: Requested revised discount percentage.
   - `created_at`: Timestamp.
+
+---
+
+## 3. 10) Understanding the Blended Discount Risk Score
+
+This score decides whether a quotation needs manager approval, and if needed, whether it also needs finance approval. The simplest way to think about it: different products are allowed different discount limits, and the system checks every line against its own limit, not just one overall limit for the whole order.
+
+### Example
+
+A Gold customer is normally allowed up to 15 percent discount. But within that same order:
+- **Hardware items** are allowed up to 15 percent, since they have healthy margins
+- **Service items** are allowed only up to 10 percent, since they have thin margins
+
+Now say a rep builds this quote:
+- **Laptop (Hardware)**: 12 percent discount given, 15 percent allowed, so this line is fine
+- **Setup Service (Service)**: 18 percent discount given, only 10 percent allowed, so this line is 8 points over its limit
+
+Even though the customer is Gold and 15 percent sounds fine on paper, the Service line broke its own stricter limit. So the whole quotation gets flagged for approval, because of that one line.
+
+### Why "blended"?
+
+Sometimes no single line is badly over its limit, but many lines are each a little over. One line 2 points over, another 3 points over, another 2 points over. None of them look alarming alone, but added together across the order, the rep has quietly given away a lot of margin. The blended score looks at the total pattern across the order, not just the single worst line, so small violations spread across many lines cannot slip through unnoticed.
+
+### Why this matters
+
+- **Automated Routing Efficiency**: It decides who needs to review the deal before it is approved, so managers are not stuck reviewing every single quotation by hand
+- **Prevents Cumulative Margin Leakage**: It stops a rep from keeping every line technically within limits while still discounting the order more than the company intends overall
+- **Multi-Level Escalation**: When a quote mixes categories with different ceilings, the system computes a blended risk score and routes to the highest required governance level (Sales Manager for standard overages, Finance/VP for deep or multi-category exceptions)
+
