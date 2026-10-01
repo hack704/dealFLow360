@@ -1,6 +1,21 @@
 # DealFlow360 — Enterprise CPQ & Deal Lifecycle Operating System
 
+[![React 18](https://img.shields.io/badge/React-18.2.0-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.0.0-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.18.2-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose%208-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E%20Tested-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > **DealFlow360** is an enterprise-grade Configure, Price, Quote (CPQ) and Deal Lifecycle Management platform. It unifies sales quotation generation, dynamic discount governance, AI-driven deal health risk scoring, multi-tier approval chains, split-warehouse order fulfillment, subscription billing with mid-cycle proration, automated invoicing, customer counter-offer negotiation, and executive analytics into a deterministic, single-source-of-truth operating system.
+
+---
+
+## Visual Workflow & Architecture
+
+![DealFlow360 Sales Workflow](./docs/dealflow360-sales-workflow.visual-check.1440x900.light.png)
 
 ---
 
@@ -18,26 +33,27 @@
    - [3.7 Subscription Billing & Mid-Cycle Proration Engine](#37-subscription-billing--mid-cycle-proration-engine)
    - [3.8 Customer Negotiation & Redline Engine](#38-customer-negotiation--redline-engine)
 4. [Master Directory & File Manifest](#4-master-directory--file-manifest)
-5. [The 18 Enterprise Wireframes & Screen Mappings](#5-the-18-enterprise-wireframes--screen-mappings)
+5. [The Enterprise Screen Directory & Route Mappings](#5-the-enterprise-screen-directory--route-mappings)
 6. [Data Tier & Mongoose Models](#6-data-tier--mongoose-models)
-7. [REST API Contracts & Endpoints](#7-rest-api-contracts--endpoints)
-8. [Security, Authentication & RBAC](#8-security-authentication--rbac)
+7. [Security, Authentication & Role-Based Access Control](#7-security-authentication--role-based-access-control)
+8. [REST API Contracts & Endpoints](#8-rest-api-contracts--endpoints)
 9. [Installation, Seeding & Development Guide](#9-installation-seeding--development-guide)
-10. [Comprehensive Master Q&A (35+ Questions & Answers)](#10-comprehensive-master-qa)
+10. [Automated Testing & Verification Suites](#10-automated-testing--verification-suites)
+11. [Comprehensive Technical & Domain Q&A](#11-comprehensive-technical--domain-qa)
 
 ---
 
 ## 1. Executive Summary & Problem Statement
 
-In mid-market and enterprise B2B sales organizations, the traditional **Quote-to-Cash (QTC)** cycle suffers from critical operational friction:
+In mid-market and enterprise B2B sales organizations, the traditional **Quote-to-Cash (QTC)** cycle suffers from operational friction across fragmented departments:
 
-| Pain Point | Traditional Impact | DealFlow360 Solution |
+| Operational Pain Point | Traditional Impact | DealFlow360 Engineered Solution |
 | :--- | :--- | :--- |
-| **Rogue Discounting** | Sales reps apply ad-hoc discounts in spreadsheets, causing margin erosion. | Deterministic volume discount curves, customer-tier bonuses, and hard approval gates capped at 70%. |
-| **Approval Bottlenecks** | Quotes stall in email threads waiting for managers and finance teams to review exceptions. | Automated multi-stage approval routing (Manager -> Finance -> VP/CFO) with SLA tracking. |
-| **Fulfillment Disconnects** | Contracts are signed without real-time inventory visibility, resulting in unexpected stockouts. | Real-time multi-depot stock reservation and algorithmic split-warehouse order allocation. |
-| **Billing Friction** | Hybrid quotes (one-time hardware + recurring software + services) lead to billing errors. | Automated contract splitting: generates one-time invoices and ongoing subscription schedules with proration. |
-| **Opaque Negotiations** | Redlines happen over untracked PDFs and phone calls, losing audit trails. | Dedicated Customer Negotiation Portal for line-item redlines, counter-discounts, and automated re-approvals. |
+| **Rogue Discounting** | Sales reps apply ad-hoc discounts in spreadsheets, causing uncontrolled margin erosion. | Deterministic volume discount curves, customer-tier incentives, and hard approval gates capped at a strict 70% maximum. |
+| **Approval Bottlenecks** | Quotes stall for days in email threads waiting for sales managers and finance teams to review margin exceptions. | Automated multi-stage approval routing (Manager &rarr; Finance &rarr; Executive/CFO) with real-time SLA tracking. |
+| **Fulfillment Disconnects** | Contracts are signed without real-time inventory visibility, resulting in surprise stockouts and shipment delays. | Real-time multi-depot stock reservation and algorithmic split-warehouse order allocation across regional hubs. |
+| **Hybrid Billing Friction** | Hybrid quotes (one-time hardware + recurring software + services) lead to invoicing mistakes and missing prorations. | Automated contract bifurcation: generates immediate one-time accounts receivable invoices and recurring subscription schedules with exact proration. |
+| **Opaque Negotiations** | Redlines happen over untracked PDFs and phone calls, losing deal velocity and audit trails. | Dedicated Customer Negotiation Portal for line-item redlines, counter-discounts, and automated re-approvals. |
 
 ---
 
@@ -46,7 +62,7 @@ In mid-market and enterprise B2B sales organizations, the traditional **Quote-to
 ```mermaid
 graph TD
     subgraph Client ["Frontend: React 18 + Vite + Tailwind CSS"]
-        UI["Apple-Grade UI (Dark/Light Mode)"]
+        UI["Apple-Grade UI (Dark / Light Mode)"]
         Router["React Router v6 Protected Routes"]
         Contexts["Auth, Quotation & Theme Contexts"]
         ClientEngine["3D SVG Isometric CPQ Engine"]
@@ -59,14 +75,14 @@ graph TD
         Controllers["13 Controller Modules"]
         
         subgraph Engines ["8 Core Business Logic Engines"]
-            E1["Quotation Engine"]
-            E2["Discount Engine"]
-            E3["Deal Health Engine"]
-            E4["Upsell Engine"]
-            E5["Approval Engine"]
-            E6["Fulfillment Engine"]
-            E7["Billing Engine"]
-            E8["Negotiation Engine"]
+            E1["1. Quotation & Pricing Engine"]
+            E2["2. Dynamic Discount Engine"]
+            E3["3. Deal Health & Risk Engine"]
+            E4["4. Upsell & Cross-Sell Engine"]
+            E5["5. Approval Governance Engine"]
+            E6["6. Split Fulfillment Engine"]
+            E7["7. Billing & Proration Engine"]
+            E8["8. Negotiation & Redline Engine"]
         end
     end
 
@@ -88,89 +104,95 @@ graph TD
 ```
 
 ### Technology Selection Rationale
-- **Frontend (React 18 + Vite):** High-speed Hot Module Replacement (<50ms), modular component lifecycle, React Context for state, Tailwind CSS with design tokens for dark/light modes.
-- **Backend (Node.js + Express):** Event-driven, non-blocking I/O ideal for real-time quotation previews and micro-service calculation loops.
-- **Database (MongoDB + Mongoose):** Document model naturally represents nested, multi-line quotations, line-item discounts, and polymorphic product structures without expensive joins.
-- **Security:** Bcrypt password hashing (salt factor 10), stateless JWT tokens with role-based authorization middleware (sales_rep, sales_manager, finance, admin, customer).
+- **Frontend (React 18 + Vite):** Ultra-fast Hot Module Replacement (<50ms HMR), component-driven architecture, zero Redux bloat via React Context (`AuthContext`, `QuotationContext`, `ThemeContext`), and Tailwind CSS design tokens for fluid dark/light modes.
+- **Backend (Node.js + Express):** Event-driven, non-blocking asynchronous I/O ideal for real-time quotation recalculations and microservice calculation loops.
+- **Database (MongoDB + Mongoose ODM):** Document-oriented model naturally represents nested, multi-line quotations, line-item discounts, and polymorphic product catalogs without high-latency multi-table joins. Built-in support for in-memory development databases via `mongodb-memory-server`.
+- **Security:** Stateless cryptographically signed JWT tokens, Bcrypt password hashing (salt rounds 10), and strict server-side authorization guards preventing unauthorized data mutation or self-approvals.
+
+> **Domain Entity Reference:** See [`docs/domain-model.md`](./docs/domain-model.md) and [`docs/domain-model.png`](./docs/domain-model.png) for full class diagrams and entity relationships.
 
 ---
 
 ## 3. Core Business Engines & Mathematical Formulas
 
+All core business calculations are centralized in `server/src/services/` to enforce business invariants across both sales rep quotation flows and customer counter-offers.
+
 ### 3.1 Quotation & Pricing Engine
 Located at `server/src/services/quotation/quotationEngine.js`.
-- Hydrates product data from MongoDB using product IDs.
+- Hydrates product catalog snapshots using MongoDB IDs.
 - Calculates list totals, volume discounts, customer-tier incentives, and custom rep discounts.
 - Computes gross profit, line margins, and overall blended margin.
 - Evaluates deal health, win probability, and determines whether managerial approval is mandatory.
-- Suggests complementary upsell items with predicted revenue impact.
+- Recommends complementary upsell items with predicted revenue impact.
 
 ### 3.2 Dynamic Discount Engine
 Located at `server/src/services/discount/discountEngine.js`.
 
-Effective Discount = min(70%, max(Rep Custom Discount, Volume Discount(Qty) + Tier Bonus))
+$$\text{Effective Discount} = \min\left(70\%,\, \max\left(\text{Rep Custom Discount},\, \text{Volume Discount}(\text{Qty}) + \text{Tier Bonus}\right)\right)$$
 
-- **Volume Discount Brackets:**
-  - >= 100 units: 12%
-  - 50 - 99 units: 8%
-  - 20 - 49 units: 5%
-  - 10 - 19 units: 3%
-  - < 10 units: 0%
-- **Customer Tier Incentive:**
-  - Enterprise: +5%
-  - Mid-Market: +2%
-  - SMB: +0%
+- **Volume Step Discount Brackets:**
+  - $\ge 100\text{ units}$: **12%**
+  - $50 - 99\text{ units}$: **8%**
+  - $20 - 49\text{ units}$: **5%**
+  - $10 - 19\text{ units}$: **3%**
+  - $< 10\text{ units}$: **0%**
+- **Customer Account Tier Bonus:**
+  - `Enterprise`: **+5%** automatic incentive
+  - `Mid-Market`: **+2%** automatic incentive
+  - `SMB`: **+0%** (standard volume brackets)
 - **Margin Calculations:**
-  - Line Margin Amount = Net Line Total - (Unit Cost * Quantity)
-  - Line Margin % = (Line Margin Amount / Net Line Total) * 100
-  - Blended Margin % = ((Grand Total - Total Cost) / Grand Total) * 100
+  - $\text{Line Margin Amount} = \text{Net Line Total} - (\text{Unit Cost} \times \text{Quantity})$
+  - $\text{Line Margin \%} = \left(\frac{\text{Line Margin Amount}}{\text{Net Line Total}}\right) \times 100$
+  - $\text{Blended Margin \%} = \left(\frac{\text{Grand Total} - \text{Total Cost}}{\text{Grand Total}}\right) \times 100$
+- **Hard Safety Ceiling:** Enforces an unbreachable **70% discount cap** regardless of combined inputs.
 
 ### 3.3 Deal Health & Risk Scoring Engine
 Located at `server/src/services/dealHealth/dealHealthEngine.js`.
 
-Risk Score = 10 (baseline) + Margin Delta + Discount Delta + Credit Delta + Size Delta
+$$\text{Risk Score} = \text{clamp}\Big(10 + \Delta_{\text{margin}} + \Delta_{\text{discount}} + \Delta_{\text{credit}} + \Delta_{\text{size}},\, 5,\, 100\Big)$$
 
-Where:
-- Margin Delta = +40 (margin < 15%), +25 (margin < 25%), +10 (margin < 35%)
-- Discount Delta = +30 (average discount > 30%), +15 (average discount > 20%)
-- Credit Delta = +25 (credit rating B or BB), +10 (credit rating BBB)
-- Size Delta = +10 (deal value > $250,000)
-- Score clamped between 5 and 100.
-
-**Win Probability:** Projected between 20% and 95% based on pricing competitiveness and customer tier trust index.
+Where factor adjustments are defined as:
+- **Margin Delta ($\Delta_{\text{margin}}$):** $+40$ (margin $< 15\%$), $+25$ (margin $< 25\%$), $+10$ (margin $< 35\%$)
+- **Discount Delta ($\Delta_{\text{discount}}$):** $+30$ (average discount $> 30\%$), $+15$ (average discount $> 20\%$)
+- **Credit Rating Delta ($\Delta_{\text{credit}}$):** $+25$ (credit rating `B` or `BB`), $+10$ (credit rating `BBB`)
+- **Deal Size Exposure ($\Delta_{\text{size}}$):** $+10$ (deal total $> \$250,000$)
+- **Win Probability:** Calculated between $20\%$ and $95\%$ based on pricing competitiveness and customer trust index.
 
 ### 3.4 Upsell & Cross-Sell Recommendation Engine
 Located at `server/src/services/upsell/upsellEngine.js`.
-- Analyzes products present in the quotation cart.
-- Detects gaps in the solution (e.g., Enterprise Software included without Premium Support SLA, or Hardware without Professional Onboarding).
-- Injects 1-click addable items with estimated margin and revenue contribution.
+- Evaluates line items present in the quotation cart in real time.
+- Identifies critical architectural or support gaps (e.g., enterprise hardware without onboarding services, or software seats lacking 24/7 SLA coverage).
+- Surfaces 1-click addable products with instant revenue and margin impact previews.
 
 ### 3.5 Multi-Tier Approval Governance Engine
 Located at `server/src/services/approval/approvalEngine.js`.
-- **Triggers:**
-  - Level 1 (Sales Manager): Rep discount > 15% OR total deal > $50,000.
-  - Level 2 (Finance Manager): Rep discount > 25% OR blended margin < 20%.
-  - Level 3 (Executive / CFO): Rep discount > 35% OR blended margin < 10% OR deal > $250,000.
-- Enforces linear step approval (pending -> approved / returned_for_revision / rejected).
+- **Governance Gate Thresholds:**
+  - **Tier 1 (Sales Manager):** Rep discount $> 15\%$ OR total quote value $> \$50,000$.
+  - **Tier 2 (Finance Manager):** Rep discount $> 25\%$ OR blended margin $< 20\%$.
+  - **Tier 3 (Executive / CFO):** Rep discount $> 35\%$, blended margin $< 10\%$, OR total deal $> \$250,000$.
+- **Strict Role Separation:** Rep self-approvals are rejected server-side with HTTP 403/400 even if permissions are spoofed.
 
 ### 3.6 Warehouse Allocation & Split Fulfillment Engine
 Located at `server/src/services/fulfillment/fulfillmentEngine.js`.
-- Scans inventory across all fulfillment centers (Main Hub, West Coast Depot, East Coast Depot).
-- If primary warehouse has insufficient on-hand stock, automatically splits line items into multi-depot shipments.
-- Creates backorder alerts and tracks shipment status (Pending, Allocated, Shipped, Delivered).
+- Inspects real-time inventory levels across all distribution hubs (`Main Hub`, `West Coast Depot`, `East Coast Depot`).
+- Automatically splits line-item quantities across secondary depots if the primary warehouse lacks on-hand stock.
+- Executes atomic inventory reservation using MongoDB `$inc: { quantityReserved: qty }` to prevent stock race conditions.
+- Generates automated backorder alerts for unallocated inventory shortfalls.
 
 ### 3.7 Subscription Billing & Mid-Cycle Proration Engine
 Located at `server/src/services/billing/billingEngine.js`.
-- Bifurcates approved deals:
-  - One-time hardware and implementation fees generate immediate accounts receivable invoices.
-  - Recurring software seats generate ongoing Subscription contracts.
+- Bifurcates approved deals automatically:
+  - **One-Time Line Items:** Generates immediate standard accounts receivable invoices.
+  - **Recurring Software Seats:** Creates ongoing `Subscription` contracts (`monthly`, `annual`).
 - **Mid-Cycle Upgrade Proration Formula:**
-  Proration Amount = (Days Remaining in Cycle / Total Days in Cycle) * (New Plan Rate - Old Plan Rate)
+
+$$\text{Proration Amount} = \left(\frac{\text{Days Remaining in Billing Cycle}}{\text{Total Days in Billing Cycle}}\right) \times (\text{New Plan Rate} - \text{Old Plan Rate})$$
 
 ### 3.8 Customer Negotiation & Redline Engine
 Located at `server/src/services/negotiation/negotiationEngine.js`.
-- Allows customers in the external portal to propose target discounts or request line-item quantity adjustments.
-- Automatically re-runs margin calculations; if counter-offer breaches manager thresholds, escalates back into the internal approval queue.
+- Allows external buyers in the Customer Portal to propose target line-item discounts, revised quantities, or delivery terms.
+- Recalculates margins and risk scores server-side.
+- If counter-offers breach standard thresholds, the deal automatically re-enters the managerial approval queue.
 
 ---
 
@@ -193,59 +215,63 @@ dealFLow360/
 │   │   ├── context/                     # AuthContext, QuotationContext, ThemeContext
 │   │   ├── hooks/                       # useAuth, useDebounce
 │   │   ├── pages/
-│   │   │   ├── admin/                   # DiscountTiersSetupPage, AdminConfigPage
+│   │   │   ├── admin/                   # DiscountTiersSetupPage, SalesBackendConfigurationPage
 │   │   │   ├── approvals/               # ApprovalsQueuePage, ApprovalDetailsPage
-│   │   │   ├── auth/                    # LoginPage, RegisterPage
+│   │   │   ├── auth/                    # LoginPage (3D CPQ Engine & 1-Click Personas)
 │   │   │   ├── billing/                 # InvoicesPage, InvoiceDetailsPage, BillingDetailPage
 │   │   │   ├── customer/                # CustomerPortalPage (Negotiation & Redlines)
 │   │   │   ├── dashboard/               # DashboardPage (Executive Cockpit)
-│   │   │   ├── dealHealth/              # DealHealthPage (Risk Monitoring)
+│   │   │   ├── dealHealth/              # DealHealthPage (Pipeline Risk Matrix)
 │   │   │   ├── fulfillment/             # FulfillmentPage, FulfillmentDetailPage
 │   │   │   ├── products/                # ProductCatalogPage, ProductDetailsPage
-│   │   │   ├── quotations/              # QuotationsListPage, QuotationBuilderPage, QuotationDetailsPage
-│   │   │   └── reports/                 # AdminReportingPage (BI League Tables)
+│   │   │   ├── quotations/              # QuotationsListPage, QuotationBuilderPage, NegotiationsPage
+│   │   │   ├── reports/                 # AdminReportingPage (BI League Tables)
+│   │   │   └── subscriptions/           # SubscriptionsPage (MRR / ARR Management)
 │   │   ├── routes/                      # AppRoutes, ProtectedRoute
-│   │   └── services/                    # Axios API Clients (quotationService, authService, etc.)
+│   │   └── services/                    # Axios API Services (quotationService, authService, etc.)
 ├── server/                               # Node.js + Express REST API Backend
 │   ├── src/
-│   │   ├── config/                      # db.js (MongoDB), constants.js (Enums)
-│   │   ├── controllers/                 # 13 Controllers (quotation, approval, billing, etc.)
-│   │   ├── middleware/                  # authMiddleware, roleMiddleware, errorHandler
-│   │   ├── models/                      # 12 Mongoose Models (User, Quotation, Product, etc.)
-│   │   ├── routes/                      # 12 REST Route files mounted at /api/*
+│   │   ├── config/                      # db.js (MongoDB / In-Memory), constants.js (Enums)
+│   │   ├── controllers/                 # 13 Controllers (quotation, approval, billing, negotiation, etc.)
+│   │   ├── middleware/                  # authMiddleware, errorHandler
+│   │   ├── models/                      # 12 Mongoose Models (User, Quotation, Product, Invoice, etc.)
+│   │   ├── routes/                      # 12 REST Route Modules mounted at /api/*
 │   │   ├── seed/                        # Comprehensive database seeder (seed.js)
 │   │   ├── services/                    # 8 Business Logic Engines
-│   │   └── utils/                       # apiResponse, helpers (decimal precision, margin formulas)
-├── docs/                                 # Technical architecture & specification documents
-├── package.json                          # Monorepo runner (concurrently running client + server)
+│   │   └── utils/                       # apiResponse, accessControl, decimal precision helpers
+├── docs/                                 # Architectural specifications, domain models, visual diagrams
+├── package.json                          # Monorepo runner (concurrently runs client + server)
 └── README.md                             # Primary technical documentation & manual
 ```
 
 ---
 
-## 5. The 18 Enterprise Wireframes & Screen Mappings
+## 5. The Enterprise Screen Directory & Route Mappings
 
-| Screen # | Page Component | Route | Key Capabilities |
-| :---: | :--- | :--- | :--- |
-| **1** | `LoginPage.jsx` | `/login` | Authentication, 3D animated CPQ puzzle engine, 1-click test persona selection. |
-| **2** | `DashboardPage.jsx` | `/dashboard` | Executive cockpit: active pipeline, approval count, margin velocity, win rates. |
-| **3** | `QuotationsListPage.jsx` | `/quotations` | Searchable quotes table, status filtering, creation date, and margin gauges. |
-| **4** | `QuotationBuilderPage.jsx` | `/quotations/new` | Interactive CPQ builder: live debounced calculations, volume discounts, upsells. |
-| **5** | `QuotationDetailsPage.jsx` | `/quotations/:id` | Detailed quotation inspection, line-item margins, customer terms, PDF print. |
-| **6** | `ApprovalsQueuePage.jsx` | `/approvals` | Managerial review queue prioritized by discount depth, margin loss, and SLA. |
-| **7** | `ApprovalDetailsPage.jsx` | `/approvals/:id` | Line-by-line violation audit, 3-stage stepper, Approve/Return/Reject actions. |
-| **8** | `FulfillmentPage.jsx` | `/fulfillment` | Logistics dashboard: inventory levels, backorders, and shipment planning. |
-| **9** | `FulfillmentDetailPage.jsx` | `/fulfillment/:id` | Multi-depot split execution: allocates partial quantities between Main and Regional hubs. |
-| **10** | `SubscriptionsPage.jsx` | `/subscriptions` | Recurring contracts overview: Active/Paused/Cancelled plans, MRR/ARR, renewal dates. |
-| **11** | `BillingDetailPage.jsx` | `/subscriptions/:id` | Subscription management: mid-cycle upgrades, proration breakdown, payment methods. |
-| **12** | `InvoicesPage.jsx` | `/invoices` | Accounts receivable ledger tracking one-time and recurring invoices, tax, status. |
-| **13** | `InvoiceDetailsPage.jsx` | `/invoices/:id` | Order-to-cash stepper (Confirmed -> Shipped -> Invoiced -> Paid), tax breakdowns, payment modal. |
-| **14** | `DealHealthPage.jsx` | `/deal-health` | Risk matrix: flags stalled quotes (> 7 days), margin anomalies, and rep nudges. |
-| **15** | `AdminReportingPage.jsx` | `/reports` | Executive BI dashboard: sales rep league tables, average discounts, approval times. |
-| **16** | `ProductCatalogPage.jsx` | `/products` | Catalog manager: SKU search, category filters (Hardware, Software, Services), tax rates. |
-| **17** | `ProductDetailsPage.jsx` | `/products/:id` | SKU configuration: base pricing, variant matrix, tier price lists, stock count. |
-| **18** | `DiscountTiersSetupPage.jsx` | `/discount-tiers` | Governance administration: sets discount caps per customer tier and approval thresholds. |
-| **Portal** | `CustomerPortalPage.jsx` | `/portal` | Customer-facing negotiation portal: buyer counter-discounts, redlines, proposal acceptance. |
+| Screen | Page Component | Route | Access Roles | Key Capabilities |
+| :---: | :--- | :--- | :--- | :--- |
+| **1** | `LoginPage.jsx` | `/login` | Public | Authentication, 3D interactive isometric CPQ engine, 1-click test persona quick switcher, magic links. |
+| **2** | `DashboardPage.jsx` | `/dashboard` | Authenticated | Executive cockpit: active pipeline MRR, approval counts, margin velocity, win rates, quick actions. |
+| **3** | `QuotationsListPage.jsx` | `/quotations` | Rep, Manager, Admin | Searchable quotes table, status filtering, date range sorting, and margin risk indicators. |
+| **4** | `QuotationsListPage.jsx` | `/pipeline` | Rep, Manager, Admin | Interactive **Kanban Deal Pipeline** organized by quotation lifecycle stages. |
+| **5** | `QuotationBuilderPage.jsx`| `/quotations/new`, `/quotations/builder` | Rep, Manager, Admin | Interactive CPQ builder with live 250ms debounced calculations, volume discounts, and dynamic upsells. |
+| **6** | `QuotationDetailsPage.jsx`| `/quotations/:id` | Rep, Manager, Admin | Detailed quotation inspection, line-item margins, customer terms, and print-ready PDF export. |
+| **7** | `NegotiationsPage.jsx` | `/negotiations` | Rep, Manager, Admin | Sales rep hub for reviewing customer redlines, counter-discount proposals, and concession logs. |
+| **Portal** | `CustomerPortalPage.jsx` | `/portal`, `/customer/dashboard` | Customer, Admin | Dedicated external buyer portal: view quotes, submit target counter-discounts, line redlines, and accept. |
+| **8** | `ApprovalsQueuePage.jsx` | `/approvals` | Manager, Finance, Admin | Prioritized managerial review queue sorted by discount depth, margin erosion, and SLA urgency. |
+| **9** | `ApprovalDetailsPage.jsx` | `/approvals/:id` | Manager, Finance, Admin | Line-by-line violation audit, 3-stage stepper, and Approve / Return for Revision / Reject actions. |
+| **10** | `FulfillmentPage.jsx` | `/fulfillment` | Operations, Finance, Admin | Multi-depot logistics dashboard: on-hand stock, backorders, and allocation health. |
+| **11** | `FulfillmentDetailPage.jsx`| `/fulfillment/:id` | Operations, Finance, Admin | Multi-depot split execution: allocates partial line-item quantities across Main and Regional hubs. |
+| **12** | `SubscriptionsPage.jsx` | `/subscriptions` | Finance, Admin | Recurring revenue management: Active/Paused/Cancelled contracts, MRR/ARR gauges, and renewal tracking. |
+| **13** | `BillingDetailPage.jsx` | `/subscriptions/:id`, `/billing/:id` | Finance, Admin | Contract deep-dive: mid-cycle upgrades, seat count changes, and itemized proration schedules. |
+| **14** | `InvoicesPage.jsx` | `/invoices`, `/billing` | Finance, Admin | Accounts receivable ledger tracking one-time hardware and recurring invoices, taxes, and aging. |
+| **15** | `InvoiceDetailsPage.jsx` | `/invoices/:id` | Finance, Admin, Customer | Order-to-cash lifecycle tracker (Confirmed &rarr; Shipped &rarr; Invoiced &rarr; Paid) and settlement modal. |
+| **16** | `DealHealthPage.jsx` | `/deal-health` | Manager, Admin | Pipeline risk matrix: flags stalled quotes (> 7 days), margin anomalies, and automated rep nudges. |
+| **17** | `AdminReportingPage.jsx` | `/reports` | Admin | Executive BI reporting: sales rep league tables, average discount trends, and approval cycle times. |
+| **18** | `ProductCatalogPage.jsx` | `/products` | Admin | Master SKU catalog: search, category filters (Hardware, Software, Cloud, Services), and tax settings. |
+| **19** | `ProductDetailsPage.jsx` | `/products/:id`, `/products/new` | Admin | SKU configuration: base list price, unit cost, billing frequency, and tier price list rules. |
+| **20** | `DiscountTiersSetupPage.jsx`| `/discount-tiers`, `/admin/discount-chains` | Manager, Admin | Governance configuration: discount caps per tier, volume bracket curves, and approval trigger rules. |
+| **Hub** | `SalesBackendConfigurationPage.jsx` | `/backend-config`, `/admin/setup` | Admin | Unified Administration Hub covering configuration areas A1 through A7. |
 
 ---
 
@@ -263,231 +289,196 @@ dealFLow360/
 
 ---
 
-## 7. REST API Contracts & Endpoints
+## 7. Security, Authentication & Role-Based Access Control
 
-| Method | Endpoint | Description | Protected Roles |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Authenticates user credentials and issues JWT token. | Public |
-| `GET` | `/api/auth/me` | Fetches current user session profile from JWT. | Authenticated |
-| `POST` | `/api/quotations/preview` | Real-time live calculation of discounts, margins, risk score, and upsells. | Rep, Manager, Admin |
-| `GET` | `/api/quotations` | List quotations with search, status, and customer filters. | Authenticated |
-| `POST` | `/api/quotations` | Persists a newly created quotation. | Rep, Manager, Admin |
-| `GET` | `/api/quotations/:id` | Returns complete quotation record with populated relations. | Authenticated |
-| `PATCH`| `/api/quotations/:id/status` | Updates quote lifecycle status (e.g. submit for approval, accept). | Authenticated |
-| `GET` | `/api/approvals` | Returns pending approval queue with urgency metrics. | Manager, Finance, Admin |
-| `POST` | `/api/approvals/:id/decision`| Captures managerial decision (`approve`, `return`, `reject`). | Manager, Finance, Admin |
-| `GET` | `/api/fulfillment` | Returns warehouse allocations and backorder alerts. | Authenticated |
-| `POST` | `/api/fulfillment/:id/split` | Executes multi-depot inventory split shipment. | Warehouse, Admin |
-| `GET` | `/api/billing/subscriptions` | Returns all recurring subscription contracts. | Finance, Admin |
-| `POST` | `/api/billing/proration` | Computes mid-cycle upgrade proration breakdown. | Finance, Admin |
-| `GET` | `/api/billing/invoices` | Accounts receivable ledger with payment status. | Authenticated |
-| `POST` | `/api/billing/invoices/:id/pay` | Captures invoice payment transaction. | Finance, Customer, Admin |
-| `POST` | `/api/negotiation/:id/counter` | Submits customer counter-offer and evaluates escalation. | Customer, Rep, Admin |
+DealFlow360 implements strict defense-in-depth across authentication and API routing:
+
+1. **Stateless JWT Authorization:** Client sends credentials to `/api/auth/login`. On verification, the server issues a cryptographically signed JWT. Subsequent requests pass `Authorization: Bearer <token>`, intercepted by Axios.
+2. **Server-Enforced RBAC & Resource Ownership:** Route handlers verify that sales reps can only edit their own draft quotations (`quotation.createdBy === req.user._id`), and buyers can only access quotes assigned to their organization (`quotation.customer === req.user.customerId`).
+3. **Self-Approval Prevention:** The backend strictly forbids quote creators from approving their own deals, even if their account holds managerial or administrative credentials.
+4. **Interactive 1-Click Demo Personas:** The login screen provides instant role-switching personas with pre-seeded data:
+
+| Persona | Role | Email | Password | Primary Scope |
+| :--- | :--- | :--- | :--- | :--- |
+| **Alex Rivera** | Sales Rep | `alex@dealflow360.com` | `password123` | Quote Builder, CPQ Upsells, Kanban Pipeline |
+| **Sarah Vance** | Sales Manager | `sarah@dealflow360.com` | `password123` | Tier 1 Approvals, Discount Tiers, Deal Health |
+| **David Sterling** | Finance / Ops | `finance@dealflow360.com` | `password123` | Tier 2 Approvals, Split Depot Fulfillment, Invoices |
+| **Marcus Chen** | Admin | `admin@dealflow360.com` | `password123` | Catalog, System Config Hub, BI Reports |
+| **Acme Buyer** | Customer Portal | `procurement@acme.com` | *(Magic Link / One-Click)* | Buyer Negotiation Portal, Redlines, Contract Acceptance |
 
 ---
 
-## 8. Security, Authentication & RBAC
+## 8. REST API Contracts & Endpoints
 
-1. **Authentication:**
-   - Client sends JSON credentials to `/api/auth/login`.
-   - Controller verifies password using `bcrypt.compare()`.
-   - Generates a cryptographically signed JWT containing `id`, `email`, and `role`.
-   - Client intercepts responses via Axios, stores token in `localStorage`, and injects `Authorization: Bearer <token>` into subsequent headers.
-2. **Role-Based Access Control (RBAC):**
-   - `roleMiddleware.js` strictly enforces role allowances.
-   - Example: Sales Reps cannot access managerial approval queues (`/api/approvals`), and Customers can only access their scoped `/portal` and assigned invoice records.
-3. **Demo Persona Quick-Login:**
-   - Pre-configured 1-click test personas on `/login` (`Peter Parker - Sales Rep`, `Sarah Vance - Manager`, `Marcus Chen - Admin`) allow instant verification across all roles.
+| Method | Endpoint | Description | Permitted Roles |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/login` | Authenticate credentials and receive signed JWT. | Public |
+| `GET` | `/api/auth/me` | Fetch active user profile from session token. | Authenticated |
+| `POST` | `/api/quotations/preview` | Real-time calculation of pricing, volume discounts, margins, and upsells. | Rep, Manager, Admin |
+| `GET` | `/api/quotations` | List quotations with search, stage, and customer filters. | Authenticated |
+| `POST` | `/api/quotations` | Create and persist a new quotation. | Rep, Manager, Admin |
+| `GET` | `/api/quotations/:id` | Fetch complete quotation record with populated relational documents. | Authenticated |
+| `PATCH`| `/api/quotations/:id/status` | Advance quote lifecycle (submit for approval, mark sent, accept). | Authenticated |
+| `GET` | `/api/approvals` | Retrieve pending approval queue with SLA timers. | Manager, Finance, Admin |
+| `POST` | `/api/approvals/:id/decision`| Record managerial decision (`approve`, `return`, `reject`). | Manager, Finance, Admin |
+| `GET` | `/api/fulfillment` | List warehouse stock allocations and backorder alerts. | Authenticated |
+| `POST` | `/api/fulfillment/:id/split` | Execute multi-depot inventory split allocation. | Operations, Admin |
+| `GET` | `/api/billing/subscriptions` | List recurring subscription contracts and ARR metrics. | Finance, Admin |
+| `POST` | `/api/billing/proration` | Compute itemized mid-cycle plan upgrade proration. | Finance, Admin |
+| `GET` | `/api/billing/invoices` | Accounts receivable ledger with payment status. | Authenticated |
+| `POST` | `/api/billing/invoices/:id/pay`| Process invoice settlement and record payment. | Finance, Customer, Admin |
+| `POST` | `/api/negotiation/:id/counter` | Submit buyer counter-proposal with automatic threshold re-check. | Customer, Rep, Admin |
 
 ---
 
 ## 9. Installation, Seeding & Development Guide
 
 ### Prerequisites
-- Node.js >= 18.0.0
-- MongoDB running locally on `mongodb://127.0.0.1:27017` (or cloud Atlas URI)
+- **Node.js** >= 18.0.0
+- **npm** >= 9.0.0
+- **MongoDB** running locally on `mongodb://127.0.0.1:27017` *(optional: system will automatically launch an in-memory database via `mongodb-memory-server` if `MONGODB_URI` is not set)*
 
 ### 1. Installation
+Install all root, client, and server dependencies in a single command:
 ```bash
-git clone <repository_url> dealflow360
-cd dealflow360
-npm install
-cd client && npm install
-cd ../server && npm install
-cd ..
+git clone https://github.com/hack704/dealFLow360.git
+cd dealFLow360
+npm run install:all
 ```
 
-### 2. Seeding the Database
-DealFlow360 automatically verifies and seeds default data on server startup. To manually re-seed:
+### 2. Clean Port Conflicts (Optional)
+If ports 5000 or 5173 are held by prior processes:
 ```bash
-cd server
-npm run seed
-cd ..
+npm run clean:ports
 ```
 
-### 3. Launching Development Environment
-From the root directory:
+### 3. Launch Development Environment
+Run both backend Express API and frontend Vite SPA concurrently:
 ```bash
 npm run dev
 ```
-- **Client Application:** `http://localhost:5173`
-- **Express Backend API:** `http://localhost:5000`
-- **Health Heartbeat:** `http://localhost:5000/api/health`
 
-### 4. Running Production Build
+- **Client Application:** [http://localhost:5173](http://localhost:5173)
+- **Express Backend API:** [http://localhost:5000](http://localhost:5000)
+- **API Health Heartbeat:** [http://localhost:5000/api/health](http://localhost:5000/api/health)
+
+### 4. Database Seeding
+The backend automatically checks and seeds a full suite of default users, customers, products, and quotations on its first startup. To trigger a clean re-seed manually:
+```bash
+npm run seed --prefix server
+```
+
+### 5. Production Build
 ```bash
 npm run build --prefix client
 ```
 
 ---
 
-## 10. Comprehensive Master Q&A (35+ Questions & Answers)
+## 10. Automated Testing & Verification Suites
+
+The repository contains comprehensive automated test suites verifying end-to-end operational flows, dynamic pricing recalculations, and RBAC security:
+
+```bash
+# 1. Full-pipeline end-to-end test (Quote creation -> Approval -> Split fulfillment -> Billing)
+node test_pipeline_e2e.js
+
+# 2. Dynamic multi-module test (Validates reactive CPQ calculations across all routes)
+node test_all_modules_dynamic.js
+
+# 3. Security and RBAC audit (Verifies route guards, ownership checks, and self-approval block)
+node test_admin_auth_audit.js
+
+# 4. Subscription lifecycle test (Validates pause, return, and mid-cycle proration)
+node test_subscription_pause_and_return.js
+
+# 5. Playwright web app automated route crawler
+python3 test_webapp_all_routes.py
+```
+
+---
+
+## 11. Comprehensive Technical & Domain Q&A
 
 ### Category 1: Business Domain & Strategic Value
 #### Q1: What core business problem does DealFlow360 solve?
-**A:** DealFlow360 resolves the operational disconnect in enterprise Quote-to-Cash (QTC). Without CPQ governance, sales reps routinely calculate quotes in spreadsheets with unapproved discounts, causing margin erosion. Concurrently, manual email approvals delay deals, warehouse inventory is checked after deals close (causing stockouts), and recurring software subscriptions are billed with incorrect prorations. DealFlow360 unifies these fragmented steps into a deterministic, automated operating system.
+**A:** DealFlow360 eliminates the operational friction and revenue leakage in enterprise Quote-to-Cash (QTC). Without automated CPQ governance, sales teams calculate quotes in ad-hoc spreadsheets with unapproved discounts, degrading corporate margins. Concurrently, manual email approvals cause multi-day delays, warehouse stock is verified only after contracts are signed (leading to backorders), and hybrid recurring software models suffer from billing inaccuracies. DealFlow360 binds these fragmented steps into a deterministic, single-source-of-truth operating system.
 
-#### Q2: What is the difference between a simple CRM and a CPQ operating system?
-**A:** A CRM tracks sales pipeline stages and relationship contacts. A CPQ (Configure, Price, Quote) system enforces mathematical business logic: it configures compatible product bundles, calculates dynamic pricing curves based on volume and customer tiers, enforces margin guardrails, triggers approval workflows, and manages split fulfillment and subscription billing.
+#### Q2: What is the difference between a traditional CRM and a CPQ operating system?
+**A:** A CRM tracks sales pipeline stages, activities, and contact records. A CPQ (Configure, Price, Quote) system enforces strict mathematical and commercial logic: it validates product compatibility, calculates dynamic pricing and tiered volume discounts, enforces margin thresholds, triggers multi-tier approval chains, and automates multi-depot split fulfillment and recurring subscription billing.
 
 #### Q3: What customer tiers are supported, and how do they impact pricing?
 **A:** Three customer account tiers are configured:
-- `Enterprise`: Receives an automatic +5% incentive discount and prioritized warehouse allocation.
-- `Mid-Market`: Receives an automatic +2% incentive discount.
-- `SMB`: Base volume discount rates apply with standard fulfillment.
+- `Enterprise`: Receives an automatic +5% commercial incentive discount and prioritized warehouse allocation.
+- `Mid-Market`: Receives an automatic +2% commercial incentive discount.
+- `SMB`: Base volume discount brackets apply with standard fulfillment priority.
 
 ---
 
 ### Category 2: Technical Architecture & Design Rationale
 #### Q4: Why was React 18 + Vite selected for the frontend instead of Next.js?
-**A:** DealFlow360 is an authenticated enterprise intranet tool (an operational cockpit), not a public marketing website requiring Server-Side Rendering (SSR) for search engine optimization (SEO). Vite delivers instant Hot Module Replacement (<50ms) and lightweight static bundles, which provides an optimal developer and user experience for state-heavy single-page applications.
+**A:** DealFlow360 is an authenticated enterprise intranet tool (an operational cockpit), not a public-facing marketing website that requires Server-Side Rendering (SSR) for search engine indexing. Vite provides sub-50ms Hot Module Replacement (HMR) and lean static production bundles, maximizing developer productivity and runtime responsiveness for state-heavy single-page applications.
 
 #### Q5: How is state managed across the frontend without Redux?
-**A:** State is organized using specialized React Context providers:
-- `AuthContext`: Manages JWT sessions and authenticated user profiles.
-- `QuotationContext`: Central CPQ state machine holding cart items, discounts, and real-time calculation previews.
-- `ThemeContext`: Toggles dark/light modes with system preference sync.
-Combining Context with custom hooks (`useDebounce`) eliminates external state bloat while maintaining sub-frame reactivity.
+**A:** State is organized using domain-focused React Context providers:
+- `AuthContext`: Manages JWT sessions, user permissions, and persistent login tokens.
+- `QuotationContext`: Central CPQ state machine managing cart line items, discounts, and real-time calculation previews.
+- `ThemeContext`: Toggles dark/light modes and synchronizes with system color preferences.
+Combining Context with custom hooks (`useDebounce`) eliminates boilerplate while delivering fluid 60 FPS interactions.
 
-#### Q6: Why is Mongoose/MongoDB used instead of a relational SQL database?
-**A:** Quotations are inherently hierarchical and snapshot-oriented documents. A single quote contains nested arrays of line items, individual discount overrides, product snapshots (preserving the list price at the exact moment of quote creation even if master catalog prices change later), and multi-stage approval logs. MongoDB stores these nested documents atomically without complex multi-table joins.
+#### Q6: Why is MongoDB / Mongoose used instead of a relational SQL database?
+**A:** Quotations are inherently hierarchical and snapshot-oriented documents. A single quote contains nested arrays of line items, individual discount overrides, and product price snapshots (preserving list prices at the exact moment of quote generation even if master catalog prices change later). MongoDB stores these nested documents atomically without complex multi-table joins.
 
 ---
 
 ### Category 3: CPQ Calculation & Pricing Mechanics
 #### Q7: How does the dynamic volume discount formula work?
-**A:** The volume discount follows a progressive step curve based on line-item quantity:
-- >= 100 units: 12%
-- 50 - 99 units: 8%
-- 20 - 49 units: 5%
-- 10 - 19 units: 3%
-- < 10 units: 0%
+**A:** Volume discounting follows a progressive step curve:
+- $\ge 100\text{ units}$: 12%
+- $50 - 99\text{ units}$: 8%
+- $20 - 49\text{ units}$: 5%
+- $10 - 19\text{ units}$: 3%
+- $< 10\text{ units}$: 0%
 The effective discount combines volume discounts and account tier bonuses, while respecting any custom rep discount, capped at a safety limit of 70%.
 
-#### Q8: How does DealFlow360 prevent UI lag when reps rapidly change quantities or discounts?
-**A:** In `QuotationContext.jsx`, the application implements a custom 250ms debounced hook (`useDebounce.js`). When a user types a quantity or moves a discount slider, local UI state updates immediately (60 FPS), while the heavy backend calculation API request (`POST /api/quotations/preview`) fires only after user input pauses for 250ms.
+#### Q8: How does DealFlow360 prevent UI lag during rapid slider adjustments?
+**A:** In `QuotationContext.jsx`, a 250ms debounced hook (`useDebounce.js`) buffers input changes. When a sales rep rapidly adjusts quantities or discount sliders, local UI state updates immediately, while the backend recalculation request (`POST /api/quotations/preview`) fires only after user input pauses for 250ms.
 
-#### Q9: What happens if a sales rep enters an unreasonable discount (e.g. 95%)?
+#### Q9: What happens if an unauthorized client enters an excessive discount (e.g. 95%)?
 **A:** The backend `discountEngine.js` enforces a strict mathematical clamp:
-Effective Discount = min(70%, Input Discount)
-Even if a client attempts to bypass the UI, the backend will refuse discounts above 70% and will flag the quote with a Critical Risk rating requiring Executive CFO approval.
+$$\text{Effective Discount} = \min(70\%,\, \text{Input Discount})$$
+Even if a client attempts to bypass frontend controls, the server refuses discounts above 70% and marks the quote with a Critical Risk rating requiring Executive CFO approval.
 
 ---
 
-### Category 4: Deal Health, Risk Scoring & Win Probability
-#### Q10: How is the Composite Deal Health Risk Score calculated?
-**A:** The composite score ranges from 5 to 100, starting from a baseline of 10 and evaluating four distinct risk factors:
-1. **Margin Degradation:** Up to +40 risk points if blended margin falls below 15%.
-2. **Deep Discounting:** Up to +30 risk points if aggregate discount exceeds 30%.
-3. **Customer Credit Risk:** Up to +25 risk points if customer credit rating is B or BB.
-4. **Deal Exposure:** +10 risk points if total deal value exceeds $250,000.
-
-#### Q11: How is Win Probability projected?
-**A:** Win probability (20% - 95%) is estimated by evaluating pricing attractiveness (competitive discounts increase win likelihood) adjusted against customer tier trust and market deal size baselines.
-
-#### Q12: How does the Deal Health Monitor screen help sales leaders?
-**A:** Located at `/deal-health`, it scans the active pipeline and flags:
-- Stalled proposals with no customer activity for > 7 days.
-- Margin anomalies where discounts exceed tier standards.
-- Approaching SLA deadlines, automatically generating rep nudges.
-
----
-
-### Category 5: Multi-Tier Approvals & Governance
-#### Q13: What are the three approval tiers and their thresholds?
+### Category 4: Multi-Tier Approvals & Governance
+#### Q10: What are the three approval tiers and their thresholds?
 **A:**
 - **Tier 1 (Sales Manager):** Required when any line-item discount exceeds 15% OR total quote value exceeds $50,000.
 - **Tier 2 (Finance Manager):** Required when discount exceeds 25% OR blended margin drops below 20%.
 - **Tier 3 (Executive / CFO):** Required when discount exceeds 35%, blended margin drops below 10%, OR total deal exceeds $250,000.
 
-#### Q14: What actions can an approver take in the Approval Queue?
-**A:** In `ApprovalDetailsPage.jsx`, approvers can:
-1. **Approve:** Advances the deal to the next approval stage or marks it fully approved.
-2. **Return for Revision:** Sends the quote back to the sales rep with mandatory feedback notes detailing required discount adjustments.
-3. **Reject:** Terminates the quote, marking its status as `rejected`.
-
-#### Q15: Can a sales rep edit a quotation while it is pending approval?
-**A:** No. Once submitted, the quotation status transitions to `pending_approval`, locking the record to prevent unapproved edits while under managerial review.
+#### Q11: Can a sales rep approve their own quotation?
+**A:** No. Self-approval is strictly forbidden and blocked by server-side invariants. If a quote creator attempts to submit an approval action on their own deal, the backend rejects the transaction with an HTTP 403/400 integrity violation error.
 
 ---
 
-### Category 6: Multi-Warehouse Split Fulfillment
-#### Q16: How does DealFlow360 prevent inventory stockouts?
-**A:** When a quote is finalized, the `fulfillmentEngine.js` verifies real-time stock levels across all configured warehouse locations (`Main Hub`, `West Coast Depot`, `East Coast Depot`). If the primary warehouse cannot fulfill the full quantity, it splits the allocation across secondary depots and creates automated backorder notifications for shortfall quantities.
-
-#### Q17: What does the Fulfillment Detail screen allow warehouse managers to do?
-**A:** At `/fulfillment/:id`, logistics managers can view itemized stock availability per depot, manually adjust split shipment quantities, generate packing slips, and confirm dispatched shipments.
+### Category 5: Multi-Warehouse Split Fulfillment
+#### Q12: How does DealFlow360 prevent inventory stockouts and overselling?
+**A:** When a quote is approved, `fulfillmentEngine.js` verifies real-time stock levels across all distribution hubs (`Main Hub`, `West Coast Depot`, `East Coast Depot`). If the primary warehouse has insufficient on-hand stock, it automatically splits line items into multi-depot shipments and creates backorder alerts for unallocated balances. All reservations use atomic MongoDB `$inc` operations to eliminate race conditions.
 
 ---
 
-### Category 7: Subscription Billing & Mid-Cycle Proration
-#### Q18: How does DealFlow360 handle hybrid deals with both hardware and software?
+### Category 6: Subscription Billing & Mid-Cycle Proration
+#### Q13: How does DealFlow360 handle hybrid deals with both hardware and software?
 **A:** In `billingEngine.js`, the system bifurcates the quote:
-- **One-Time Line Items:** (e.g. servers, setup fees) generate an immediate standard accounts receivable Invoice.
-- **Recurring Line Items:** (e.g. SaaS software seats) instantiate a recurring `Subscription` record with assigned billing frequencies (`monthly`, `annual`).
+- **One-Time Line Items:** (e.g., servers, installation fees) generate an immediate standard accounts receivable Invoice.
+- **Recurring Line Items:** (e.g., SaaS software licenses) instantiate a recurring `Subscription` contract with assigned billing cadences (`monthly`, `annual`).
 
-#### Q19: How is mid-cycle subscription proration calculated?
-**A:** When a customer upgrades their recurring plan mid-cycle (e.g. from 10 seats to 25 seats 10 days into a 30-day month):
-Proration Amount = (Days Remaining / Total Days in Cycle) * (New Monthly Rate - Old Monthly Rate)
-The engine calculates the exact pro-rated difference and immediately issues an incremental adjustment invoice.
-
----
-
-### Category 8: Customer Negotiation & Redlines
-#### Q20: What is the Customer Negotiation Portal?
-**A:** Located at `/portal`, this is a secure, external-facing interface where enterprise buyers review proposed quotes, accept contracts, or submit structured counter-proposals with line-item discount redlines and delivery date requests.
-
-#### Q21: What happens when a customer counters with a steeper discount?
-**A:** The `negotiationEngine.js` recalculates the proposed margin. If the customer's counter-offer pushes the discount beyond the sales rep's authorized threshold, the quote automatically transitions to `pending_approval` and re-enters the managerial queue.
-
----
-
-### Category 9: Frontend Craft & 3D Isometric CPQ Engine
-#### Q22: How is the 3D isometric puzzle animation implemented on the Login Page?
-**A:** In `IsometricIllustration.jsx`, pure SVG geometry combined with hardware-accelerated CSS keyframes renders a 3D isometric cube architecture:
-- A floating white keystone cube hovers in mid-air on the left.
-- It glides along the 3D isometric vector and docks into the open wireframe socket.
-- On docking, contact seams emit an electric spark, the wireframe dissolves, the amber CPQ core flares with golden light, and data pulses shoot down circuit traces into terminal pins.
-- It includes 3D perspective mouse parallax (`rotateX`, `rotateY`) and click-to-solve controls.
-
-#### Q23: How does the application support both Dark and Light modes?
-**A:** Using Tailwind's class-based dark mode (`darkMode: "class"`), the `ThemeContext` toggles a `.dark` class on the root HTML element. Custom color tokens (e.g. `bg-[#fafafc]` in light mode, `bg-[#000000]` in dark mode) provide high-contrast readability across all 18 screens.
-
----
-
-### Category 10: Security, Deployment & Operations
-#### Q24: How are passwords stored and secured?
-**A:** Passwords are never stored in plain text. During registration or seeding, passwords are encrypted using `bcrypt.hash(password, 10)`.
-
-#### Q25: What happens if MongoDB connection drops during runtime?
-**A:** In `server/src/config/db.js`, Mongoose registers connection listeners (`error`, `disconnected`). It logs connection failures without crashing the process and attempts automatic reconnection.
-
-#### Q26: What are the primary environment variables required?
-**A:**
-- `PORT`: Express server port (default `5000`).
-- `MONGO_URI`: MongoDB connection URI (default `mongodb://127.0.0.1:27017/dealflow360`).
-- `JWT_SECRET`: Secret key used for signing session tokens.
-- `VITE_API_URL`: Client-side base URL for backend API requests.
+#### Q14: How is mid-cycle subscription proration calculated?
+**A:** When a customer upgrades their recurring plan mid-cycle (e.g., expanding from 10 to 25 seats 10 days into a 30-day month):
+$$\text{Proration Amount} = \left(\frac{\text{Days Remaining}}{\text{Total Days in Cycle}}\right) \times (\text{New Monthly Rate} - \text{Old Monthly Rate})$$
+The engine computes the pro-rated difference and immediately issues an incremental adjustment invoice.
 
 ---
 
